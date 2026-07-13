@@ -1,0 +1,37 @@
+name: Public repository safety
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Scan public repository contents
+        shell: pwsh
+        run: ./scripts/check_public_repo.ps1
+
+      - name: Verify released firmware hashes
+        shell: bash
+        run: sha256sum --check FIRMWARE_SHA256SUMS.txt
+
+      - name: Build and run EX5 obstacle guard tests
+        shell: bash
+        run: |
+          gcc -std=c99 -Wall -Wextra -Werror \
+            -IEX5/MiniBalance/CONTROL \
+            EX5/Tools/obstacle_guard_test.c \
+            EX5/MiniBalance/CONTROL/obstacle_guard.c \
+            -o "$RUNNER_TEMP/obstacle_guard_test"
+          "$RUNNER_TEMP/obstacle_guard_test"
