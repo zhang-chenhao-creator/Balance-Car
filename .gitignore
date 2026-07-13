@@ -1,0 +1,46 @@
+# 本机配置与仅本地资料
+.vscode/
+_local/
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+id_rsa*
+credentials*.json
+secrets*.json
+**/mcuisp.exe
+
+# Python 缓存
+**/__pycache__/
+*.py[cod]
+
+# 编辑器、临时目录
+**/.fang_cloud_tmp_dir/
+*.tmp
+*.bak
+*~
+
+# Keil 用户配置与编译中间产物
+**/*.uvguix.*
+**/Output/
+**/OBJ/
+**/*.axf
+**/*.build_log.htm
+**/*.crf
+**/*.d
+**/*.dep
+**/*.htm
+**/*.lnp
+**/*.lst
+**/*.map
+**/*.o
+**/*.sct
+
+# 本地烧录备份、运行日志与文档渲染检查图
+**/backup/
+**/实验报告/
+**/运行记录/
+**/render_check/
+**/历史版本/
