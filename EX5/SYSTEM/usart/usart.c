@@ -178,7 +178,7 @@ static void ascii_print_status(void)
             (int)Velocity_Kp, (int)Velocity_Ki, Middle_angle, Voltage,
             Bluetooth_Command,
             (int)Angle_Balance, (int)Gyro_Balance,
-            Distance, Ultrasonic_Valid, Ultrasonic_Obstacle,
+            (unsigned long)Distance, Ultrasonic_Valid, Ultrasonic_Obstacle,
             Ultrasonic_Avoid_Enable, Ultrasonic_Avoid_Action,
             Ultrasonic_Miss_Count,
             Ultrasonic_Stop_Distance, Ultrasonic_Slow_Distance,
