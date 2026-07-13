@@ -10,6 +10,7 @@ _local/
 id_rsa*
 credentials*.json
 secrets*.json
+**/mcuisp.exe
 
 # Python 缓存
 **/__pycache__/
