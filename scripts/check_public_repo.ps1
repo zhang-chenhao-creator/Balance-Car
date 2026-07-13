@@ -4,7 +4,7 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Push-Location $repoRoot
 
 try {
-    $files = @(git ls-files --cached --others --exclude-standard)
+    $files = @(git -c core.quotePath=false ls-files --cached --others --exclude-standard)
     $findings = New-Object System.Collections.Generic.List[string]
 
     $forbiddenPath = '(?i)(^|/)(_local|Output|OBJ|backup|实验报告|运行记录|render_check|历史版本)(/|$)'
@@ -32,8 +32,9 @@ try {
     }
 
     foreach ($file in $files) {
-        if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { continue }
-        $item = Get-Item -LiteralPath $file
+        $fullPath = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $file))
+        if (-not [System.IO.File]::Exists($fullPath)) { continue }
+        $item = [System.IO.FileInfo]::new($fullPath)
         if ($item.Length -gt 5MB) { continue }
         $latin1 = [System.Text.Encoding]::GetEncoding(28591)
         $text = $latin1.GetString([System.IO.File]::ReadAllBytes($item.FullName))
