@@ -1,6 +1,6 @@
 # WHEELTEC B585 平衡小车实验
 
-本仓库整理 WHEELTEC B585 两轮平衡小车的四个实验。硬件主控为 STM32F103RCT6，姿态传感器为 MPU6050，工程主要使用 Keil MDK 构建。
+本仓库整理 WHEELTEC B585 两轮平衡小车的五个实验。硬件主控为 STM32F103RCT6，姿态传感器为 MPU6050，工程主要使用 Keil MDK 构建。
 
 当前仓库从整理后的工作区重新建立历史。EX0 已移除；EX3 已用「实验三平衡串口精简版」替换原先混杂且落后的工程，作为当前实验三主线。
 
@@ -12,14 +12,16 @@
 | [EX2](EX2/) | MPU6050 姿态采集与姿态解算 | `EX2/Projects/MDK-ARM/atk_f103.uvprojx` | `EX2/firmware/` |
 | [EX3](EX3/) | 角度环 PD + 速度环 PI、串口调参的平衡精简版 | `EX3/source/USER/MiniBalance.uvprojx` | `EX3/firmware/` |
 | [EX4](EX4/) | 平衡控制、蓝牙遥控与 OLED 状态显示 | `EX4/USER/MiniBalance.uvprojx` | `EX4/firmware/` |
+| [EX5](EX5/) | 超声波安全监督、动态减速与防撞 | `EX5/USER/MiniBalance.uvprojx` | `EX5/Firmware/` |
 
 ## 推荐阅读顺序
 
 1. 阅读对应实验目录的 `README.md`。
-2. 用 Keil 打开表格中的 `.uvprojx` 工程。
-3. 先检查硬件连接、电机方向和编码器方向，再编译、烧录。
-4. 调试 EX3 时，先阅读 [精简版源码改动说明](EX3/docs/精简版源码改动说明.md) 和 [验收答辩代码导读](EX3/docs/验收答辩代码导读.md)。
-5. 如只需烧录已整理的构建结果，使用各实验的 `firmware/` 目录。
+2. 按 [构建与复现指南](BUILDING.md) 准备工具并校验仓库内容。
+3. 用 Keil 打开表格中的 `.uvprojx` 工程。
+4. 先检查硬件连接、电机方向和编码器方向，再编译、烧录。
+5. 调试 EX3 时，先阅读 [精简版源码改动说明](EX3/docs/精简版源码改动说明.md) 和 [验收答辩代码导读](EX3/docs/验收答辩代码导读.md)。
+6. 如只需烧录已整理的构建结果，使用各实验的固件目录。
 
 所有保留固件的校验值见 [FIRMWARE_SHA256SUMS.txt](FIRMWARE_SHA256SUMS.txt)。
 
@@ -61,6 +63,8 @@ PID 27000 110 400 2
 
 ## 相关文档
 
+- [构建与复现指南](BUILDING.md)
+- [参与贡献](CONTRIBUTING.md)
 - [项目背景与硬件说明](docs/项目背景与硬件说明.md)
 - [EX1–EX3 面试知识点](docs/EX1-EX3_面试知识点.md)
 - [文档索引](docs/README.md)

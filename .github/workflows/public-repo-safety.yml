@@ -23,8 +23,8 @@ jobs:
         run: ./scripts/check_public_repo.ps1
 
       - name: Verify released firmware hashes
-        shell: bash
-        run: sha256sum --check FIRMWARE_SHA256SUMS.txt
+        shell: pwsh
+        run: ./scripts/verify_firmware_hashes.ps1
 
       - name: Build and run EX5 obstacle guard tests
         shell: bash
