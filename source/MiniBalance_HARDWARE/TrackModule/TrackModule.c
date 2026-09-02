@@ -22,16 +22,96 @@ float Turn90Angle  = 80;   // 直角弯转向参数
 float TurnMaxAngle = 65;   // 大弯道转向参数（椭圆例程为45）
 float TurnMidAngle = 40;   // 中等转向参数（丢线时使用）（椭圆例程为25）
 float TurnMinAngle = 15;   // 微调转向参数
-float BaseSpeed = 500;     // 基础巡线速度（直行时的速度，mm/s），为原通用参数约2倍
+float BaseSpeed = 400;     // 直道基础巡线速度（mm/s），降低直道进入弯道时的惯性
+float FineSpeed = 375;     // 微调状态目标速度（mm/s）
+float CurveSpeed = 350;    // 普通弯道目标速度（mm/s）
+float BigCurveSpeed = 325; // 大弯道目标速度（mm/s）
+float LostSpeed = 200;     // 丢线或未定义状态的安全速度（mm/s）
 float ForwardLimit = 50;   // 前行限制(转向差速大于该值时前进速度降为0)（椭圆例程为80）
 float Track_Turn_Scale = 0.7f; // turn_diff(mm/s) → 转向环目标幅值 的换算系数
                               // 参考:遥控全速转向时 Turn_Target≈54(即turn_diff≈77时)
+float Track_Speed_RiseStep = 5;  // 每个5ms周期允许的加速步长（mm/s）
+float Track_Speed_FallStep = 10; // 每个5ms周期允许的减速步长（mm/s）
+u8 Track_CenterConfirmCycles = 3; // 恢复直行前需要连续确认的周期数
 
 /* 传感器状态定义见 TrackModule.h 中的 SensorState_t */
 
 float base_speed_mm = 0;// 基础速度（mm/s）
 float turn_diff = 0;    // 转向差速
 u8 Track_state = 0;     // 最新识别的传感器状态(供OLED显示)
+
+static int Track_SpeedState = STATE_STRAIGHT;
+static u8 Track_CenterStableCount = 0;
+
+/*=============================================================================*
+ * 速度目标与实际下发值之间的斜坡限制                                     *
+ * 减速步长大于加速步长，保证进弯及时降速、出弯平滑恢复。                 *
+ *=============================================================================*/
+static float Track_Speed_Ramp(float current, float target)
+{
+    float step;
+
+    if (target > current)
+    {
+        step = Track_Speed_RiseStep;
+        if (target - current <= step) return target;
+        return current + step;
+    }
+
+    step = Track_Speed_FallStep;
+    if (current - target <= step) return target;
+    return current - step;
+}
+
+/* 直道恢复需要连续确认，进入弯道则立即采用更低的速度目标。 */
+static int Track_GetSpeedState(int sensor_state)
+{
+    if (sensor_state == STATE_STRAIGHT)
+    {
+        if (Track_SpeedState != STATE_STRAIGHT)
+        {
+            if (Track_CenterStableCount < Track_CenterConfirmCycles)
+            {
+                Track_CenterStableCount++;
+            }
+            if (Track_CenterStableCount >= Track_CenterConfirmCycles)
+            {
+                Track_SpeedState = STATE_STRAIGHT;
+            }
+        }
+    }
+    else
+    {
+        Track_CenterStableCount = 0;
+        Track_SpeedState = sensor_state;
+    }
+
+    return Track_SpeedState;
+}
+
+static float Track_TargetSpeedForState(int sensor_state)
+{
+    switch (sensor_state)
+    {
+        case STATE_STRAIGHT:
+            return BaseSpeed;
+        case STATE_LEFT_SMALL:
+        case STATE_RIGHT_SMALL:
+            return FineSpeed;
+        case STATE_LEFT_90_A:
+        case STATE_LEFT_90_B:
+        case STATE_RIGHT_90_A:
+        case STATE_RIGHT_90_B:
+            return CurveSpeed;
+        case STATE_LEFT_BIG:
+        case STATE_RIGHT_BIG:
+        case STATE_CROSS:
+            return BigCurveSpeed;
+        case STATE_LOST:
+        default:
+            return LostSpeed;
+    }
+}
 
 /*=============================================================================*
  * 巡线功能函数（计算 base_speed_mm / turn_diff 两个输出量）					   *
@@ -91,12 +171,13 @@ void IRDM_line_inspection(void)
 	{
 		last_state=sensor_state;
 	}
-	// 转向差速越大，基础速度越低：保证转弯时减速
-	if(fabs(turn_diff)<ForwardLimit)
-	{
-		base_speed_mm = BaseSpeed - (BaseSpeed * (fabs(turn_diff) / ForwardLimit));
-	}
-	else base_speed_mm=0;
+    /*
+     * 速度不再随状态直接跳变：先得到离散目标，再通过斜坡限制实际速度。
+     * 1001 恢复到直道时需要连续确认，进入弯道或异常状态则立即降目标。
+     */
+    base_speed_mm = Track_Speed_Ramp(
+        base_speed_mm,
+        Track_TargetSpeedForState(Track_GetSpeedState(sensor_state)));
 }
 
 /**************************************************************************
@@ -111,6 +192,11 @@ Output  : none
 void TrackModule_Init(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure = {0};
+	base_speed_mm = 0;
+	turn_diff = 0;
+	Track_state = 0;
+	Track_SpeedState = STATE_STRAIGHT;
+	Track_CenterStableCount = 0;
 
 	__HAL_RCC_GPIOC_CLK_ENABLE();      // 使能 GPIOC 时钟
 	__HAL_RCC_GPIOB_CLK_ENABLE();      // 使能 GPIOB 时钟

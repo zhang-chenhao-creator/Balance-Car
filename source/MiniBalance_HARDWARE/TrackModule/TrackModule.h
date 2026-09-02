@@ -39,8 +39,15 @@ extern float TurnMaxAngle;   // 大弯道转向参数
 extern float TurnMidAngle;   // 中等转向参数（丢线时使用）
 extern float TurnMinAngle;   // 微调转向参数
 extern float BaseSpeed;      // 基础巡线速度（直行时的速度，单位mm/s）
+extern float FineSpeed;       // 微调状态目标速度（单位mm/s）
+extern float CurveSpeed;      // 普通弯道目标速度（单位mm/s）
+extern float BigCurveSpeed;   // 大弯道目标速度（单位mm/s）
+extern float LostSpeed;       // 丢线/未定义状态安全速度（单位mm/s）
 extern float ForwardLimit;   // 前行限制(转向差速大于该值则前进速度降为0)
 extern float Track_Turn_Scale; // 转向差速(mm/s) 换算到转向环目标幅值的系数
+extern float Track_Speed_RiseStep;  // 每个5ms周期允许的加速步长（mm/s）
+extern float Track_Speed_FallStep;  // 每个5ms周期允许的减速步长（mm/s）
+extern u8 Track_CenterConfirmCycles; // 恢复直行前需要连续确认的周期数
 
 /*==============================传感器状态定义==============================*
  * 识别到黑线时为1, sensor_state = (DH1<<3)|(DH2<<2)|(DH3<<1)|DH4			   *
