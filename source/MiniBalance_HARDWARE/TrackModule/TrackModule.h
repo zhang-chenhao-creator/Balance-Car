@@ -75,7 +75,6 @@ typedef enum {
 extern float base_speed_mm ; // 当前巡线目标前进速度（mm/s）
 extern float turn_diff ;     // 当前转向差速（左+右-，单位：mm/s）
 extern u8 Track_state ;      // 最新识别的传感器状态(SensorState_t, 供OLED显示)
-extern u8 Track_InPlaceTurn; // 1=路口原地转：前进目标0、清速度积分，左右轮反向
 
 void TrackModule_Init(void);   // 进入巡线模式：配置PB8/PC8/PC4/PC9为输入下拉
 void TrackModule_DeInit(void); // 退出巡线模式：恢复扩展接口为PS2默认状态

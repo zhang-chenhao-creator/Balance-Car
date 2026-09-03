@@ -39,7 +39,6 @@ u8 Track_CenterConfirmCycles = 3; // 恢复直行前需要连续确认的周期�
 #define TRACK_START_CENTER_CYCLES    6   /* 30ms */
 #define TRACK_FORK_DEBOUNCE          1   /* 5ms，左边一出现支路立刻锁存 */
 #define TRACK_CROSS_DEBOUNCE         2   /* 10ms */
-#define TRACK_BRAKE_CYCLES          40   /* 200ms，先刹住再原地转 */
 #define TRACK_TURN_MIN_CYCLES       30   /* 150ms */
 #define TRACK_TURN_CENTER_CYCLES     3   /* 15ms */
 #define TRACK_TURN_WIDE_CYCLES      80   /* 400ms，宽胶带时允许不出现中间全白 */
@@ -56,8 +55,7 @@ typedef enum {
     RUN_TURN,
     RUN_SEARCH,
     RUN_FINISH,
-    RUN_FAULT,
-    RUN_BRAKE
+    RUN_FAULT
 } TrackRun_t;
 
 typedef enum {
@@ -95,7 +93,6 @@ static const TrackRouteItem_t Track_Route[TRACK_ROUTE_LEN] = {
 float base_speed_mm = 0;// 基础速度（mm/s）
 float turn_diff = 0;    // 转向差速
 u8 Track_state = 0;     // 最新识别的传感器状态(供OLED显示)
-u8 Track_InPlaceTurn = 0; // 1=清速度积分+左右轮反向原地转
 
 static int Track_SpeedState = STATE_STRAIGHT;
 static u8 Track_CenterStableCount = 0;
@@ -113,7 +110,6 @@ static u16 Track_TurnCycles = 0;
 static u8 Track_TurnSawGap = 0;
 static u8 Track_TurnCenterCount = 0;
 static u16 Track_SearchCycles = 0;
-static u16 Track_BrakeCycles = 0;
 
 /*=============================================================================*
  * 速度目标与实际下发值之间的斜坡限制                                     *
@@ -331,15 +327,6 @@ static void Track_ResetTurnFlags(void)
     Track_TurnCenterCount = 0;
 }
 
-static void Track_SetInPlace(u8 enable)
-{
-    Track_InPlaceTurn = enable;
-    if (enable)
-    {
-        base_speed_mm = 0;
-    }
-}
-
 static void Track_LockRouteAction(void)
 {
     Track_LockedAct = Track_Route[Track_RouteIndex].act;
@@ -352,15 +339,12 @@ static void Track_LockRouteAction(void)
     {
         Track_Run = RUN_FINISH;
         turn_diff = 0;
-        Track_SetInPlace(0);
         return;
     }
-    /* 先刹住 200ms，再左右轮反向原地转 */
-    Track_Run = RUN_BRAKE;
-    Track_BrakeCycles = 0;
+    Track_Run = RUN_TURN;
     Track_ResetTurnFlags();
-    turn_diff = 0;
-    Track_SetInPlace(1);
+    Track_ApplyLockedTurn(Track_LockedAct);
+    base_speed_mm = JunctionSpeed; /* 立刻刹住前进，不把 400mm/s 带进路口 */
 }
 
 static void Track_UpdateArming(int sensor_state)
@@ -420,15 +404,12 @@ static void Track_EnterSearch(void)
     Track_LostCount = 0;
     Track_JunctionCount = 0;
     Track_ApplySearchTurn();
-    if (Track_LastSide == SIDE_CENTER) Track_SetInPlace(0);
-    else Track_SetInPlace(1);
 }
 
 static void Track_EnterFault(void)
 {
     Track_Run = RUN_FAULT;
     turn_diff = 0;
-    Track_SetInPlace(0);
 }
 
 static float Track_PatrolTargetSpeed(int sensor_state)
@@ -492,23 +473,10 @@ static void Track_RouteStep(int sensor_state)
             {
                 Track_LockRouteAction();
                 if (Track_Run == RUN_FINISH) target_speed = 0;
-                else target_speed = 0;
+                else target_speed = JunctionSpeed;
                 break;
             }
             target_speed = Track_PatrolTargetSpeed(sensor_state);
-            break;
-
-        case RUN_BRAKE:
-            turn_diff = 0;
-            Track_SetInPlace(1);
-            if (Track_BrakeCycles < 65535) Track_BrakeCycles++;
-            if (Track_BrakeCycles >= TRACK_BRAKE_CYCLES)
-            {
-                Track_Run = RUN_TURN;
-                Track_ResetTurnFlags();
-                Track_ApplyLockedTurn(Track_LockedAct);
-            }
-            target_speed = 0;
             break;
 
         case RUN_TURN:
@@ -542,10 +510,9 @@ static void Track_RouteStep(int sensor_state)
                 Track_ResetTurnFlags();
                 Track_Armed = 0;
                 Track_CenterHold = 0;
-                Track_SetInPlace(0);
                 Track_FollowPatrol(sensor_state);
             }
-            target_speed = 0;
+            target_speed = JunctionSpeed;
             break;
 
         case RUN_SEARCH:
@@ -564,7 +531,6 @@ static void Track_RouteStep(int sensor_state)
                 Track_Run = RUN_PATROL;
                 Track_SearchCycles = 0;
                 Track_RecoverCount = 0;
-                Track_SetInPlace(0);
                 Track_FollowPatrol(sensor_state);
                 target_speed = Track_PatrolTargetSpeed(sensor_state);
                 break;
@@ -584,7 +550,6 @@ static void Track_RouteStep(int sensor_state)
         case RUN_FAULT:
         default:
             turn_diff = 0;
-            Track_SetInPlace(0);
             target_speed = 0;
             break;
     }
@@ -633,8 +598,6 @@ void TrackModule_Init(void)
 	Track_TurnSawGap = 0;
 	Track_TurnCenterCount = 0;
 	Track_SearchCycles = 0;
-	Track_BrakeCycles = 0;
-	Track_InPlaceTurn = 0;
 
 	__HAL_RCC_GPIOC_CLK_ENABLE();      // 使能 GPIOC 时钟
 	__HAL_RCC_GPIOB_CLK_ENABLE();      // 使能 GPIOB 时钟
