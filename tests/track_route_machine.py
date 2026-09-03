@@ -18,6 +18,7 @@ RUN_TURN = 2
 RUN_SEARCH = 3
 RUN_FINISH = 4
 RUN_FAULT = 5
+RUN_BRAKE = 6
 
 ACT_LEFT = 0
 ACT_RIGHT = 1
@@ -48,6 +49,7 @@ CENTER_CONFIRM = 3
 START_CENTER_CYCLES = 6
 FORK_DEBOUNCE = 1
 CROSS_DEBOUNCE = 2
+BRAKE_CYCLES = 40
 TURN_MIN_CYCLES = 30
 TURN_CENTER_CYCLES = 3
 TURN_TIMEOUT_CYCLES = 240
@@ -207,6 +209,8 @@ class RouteMachine:
         self.turn_saw_gap = 0
         self.turn_center_count = 0
         self.search_cycles = 0
+        self.brake_cycles = 0
+        self.in_place = 0
 
     def _speed_state(self, sensor):
         if sensor == STATE_STRAIGHT:
@@ -261,13 +265,16 @@ class RouteMachine:
         if self.locked_act == ACT_STOP:
             self.run = RUN_FINISH
             self.turn_diff = 0.0
+            self.in_place = 0
             return
-        self.run = RUN_TURN
+        self.run = RUN_BRAKE
+        self.brake_cycles = 0
         self.turn_cycles = 0
         self.turn_saw_gap = 0
         self.turn_center_count = 0
-        self.turn_diff = locked_turn(self.locked_act)
-        self.base_speed = JUNCTION_SPEED
+        self.turn_diff = 0.0
+        self.base_speed = 0.0
+        self.in_place = 1
 
     def _enter_search(self):
         self.run = RUN_SEARCH
@@ -276,6 +283,7 @@ class RouteMachine:
         self.lost_count = 0
         self.junction_count = 0
         self.turn_diff = search_turn(self.last_side)
+        self.in_place = 0 if self.last_side == SIDE_CENTER else 1
 
     def step(self, sensor):
         if sensor != STATE_LOST:
@@ -312,9 +320,20 @@ class RouteMachine:
                     ROUTE[self.index][0]
                 ):
                     self._lock()
-                    target = 0.0 if self.run == RUN_FINISH else JUNCTION_SPEED
+                    target = 0.0
                 else:
                     target = self._patrol_target(sensor)
+        elif self.run == RUN_BRAKE:
+            self.turn_diff = 0.0
+            self.in_place = 1
+            self.brake_cycles = min(self.brake_cycles + 1, 65535)
+            if self.brake_cycles >= BRAKE_CYCLES:
+                self.run = RUN_TURN
+                self.turn_cycles = 0
+                self.turn_saw_gap = 0
+                self.turn_center_count = 0
+                self.turn_diff = locked_turn(self.locked_act)
+            target = 0.0
         elif self.run == RUN_TURN:
             self.turn_diff = locked_turn(self.locked_act)
             self.turn_cycles = min(self.turn_cycles + 1, 65535)
@@ -343,8 +362,9 @@ class RouteMachine:
                     self.turn_center_count = 0
                     self.armed = 0
                     self.center_hold = 0
+                    self.in_place = 0
                     self.turn_diff = follow_turn(sensor)
-                target = JUNCTION_SPEED
+                target = 0.0
         elif self.run == RUN_SEARCH:
             self.turn_diff = search_turn(self.last_side)
             self.search_cycles = min(self.search_cycles + 1, 65535)
@@ -356,16 +376,19 @@ class RouteMachine:
                 self.run = RUN_PATROL
                 self.search_cycles = 0
                 self.recover_count = 0
+                self.in_place = 0
                 self.turn_diff = follow_turn(sensor)
                 target = self._patrol_target(sensor)
             elif self.search_cycles >= SEARCH_TIMEOUT_CYCLES:
                 self.run = RUN_FAULT
                 self.turn_diff = 0.0
+                self.in_place = 0
                 target = 0.0
             else:
                 target = LOST_SPEED if self.last_side == SIDE_CENTER else JUNCTION_SPEED
         else:
             self.turn_diff = 0.0
+            self.in_place = 0
             target = 0.0
 
         self.base_speed = ramp_step(self.base_speed, target)

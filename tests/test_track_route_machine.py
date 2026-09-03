@@ -7,9 +7,11 @@ from track_route_machine import (
     ACT_RIGHT,
     ACT_STOP,
     FINISH_SPEED,
+    BRAKE_CYCLES,
     JUNCTION_SPEED,
     LOST_DEBOUNCE,
     RECOVER_CYCLES,
+    RUN_BRAKE,
     RUN_FAULT,
     RUN_FINISH,
     RUN_PATROL,
@@ -55,6 +57,7 @@ def leave_start(machine=None):
 
 
 def finish_turn(machine, gap=STATE_RIGHT_BIG):
+    machine.feed(gap, BRAKE_CYCLES)
     machine.feed(gap, TURN_MIN_CYCLES)
     machine.feed(STATE_STRAIGHT, 3)
     machine.feed(STATE_STRAIGHT, START_CENTER_CYCLES)
@@ -90,6 +93,9 @@ class FirmwareContractTests(unittest.TestCase):
         self.assertRegex(text, r"float\s+JunctionSpeed\s*=\s*0")
         self.assertRegex(text, r"float\s+LostSpeed\s*=\s*200")
         self.assertRegex(text, r"float\s+FinishSpeed\s*=\s*200")
+        self.assertIn("TRACK_BRAKE_CYCLES", text)
+        self.assertIn("Track_InPlaceTurn", text)
+        self.assertIn("RUN_BRAKE", text)
 
     def test_left_fork_includes_1100_and_1110(self):
         text = SOURCE.read_text(encoding="utf-8")
@@ -127,25 +133,29 @@ class RouteMachineTests(unittest.TestCase):
     def test_clean_left_fork_locks_left_once(self):
         machine = leave_start()
         machine.feed(STATE_RIGHT_90_A, 1)
-        self.assertEqual(machine.run, RUN_TURN)
+        self.assertEqual(machine.run, RUN_BRAKE)
         self.assertEqual(machine.index, 1)
         self.assertEqual(machine.locked_act, ACT_LEFT)
-        self.assertEqual(machine.turn_diff, -TURN90)
+        self.assertEqual(machine.turn_diff, 0.0)
         self.assertEqual(machine.base_speed, 0.0)
-        machine.feed(STATE_RIGHT_90_A, 10)
+        self.assertEqual(machine.in_place, 1)
+        machine.feed(STATE_RIGHT_90_A, BRAKE_CYCLES)
+        self.assertEqual(machine.run, RUN_TURN)
+        self.assertEqual(machine.turn_diff, -TURN90)
         self.assertEqual(machine.index, 1)
 
     def test_sloppy_1100_also_locks_left(self):
         machine = leave_start()
         machine.feed(STATE_RIGHT_90_B, 1)
-        self.assertEqual(machine.run, RUN_TURN)
+        self.assertEqual(machine.run, RUN_BRAKE)
         self.assertEqual(machine.locked_act, ACT_LEFT)
+        machine.feed(STATE_RIGHT_90_B, BRAKE_CYCLES)
         self.assertEqual(machine.turn_diff, -TURN90)
 
     def test_early_1110_locks_left_when_armed(self):
         machine = leave_start()
         machine.feed(STATE_RIGHT_BIG, 1)
-        self.assertEqual(machine.run, RUN_TURN)
+        self.assertEqual(machine.run, RUN_BRAKE)
         self.assertEqual(machine.locked_act, ACT_LEFT)
 
     def test_lock_snaps_off_cruise_speed(self):
@@ -153,8 +163,9 @@ class RouteMachineTests(unittest.TestCase):
         machine.feed(STATE_STRAIGHT, 40)
         self.assertGreater(machine.base_speed, 100.0)
         machine.feed(STATE_RIGHT_90_A, 1)
-        self.assertEqual(machine.run, RUN_TURN)
+        self.assertEqual(machine.run, RUN_BRAKE)
         self.assertEqual(machine.base_speed, 0.0)
+        self.assertEqual(machine.in_place, 1)
 
     def test_unarmed_1100_does_not_lock_left(self):
         machine = RouteMachine()
@@ -181,7 +192,7 @@ class RouteMachineTests(unittest.TestCase):
     def test_turn_ignores_lost_and_does_not_enter_search(self):
         machine = leave_start()
         machine.feed(STATE_RIGHT_90_A, 1)
-        machine.feed(STATE_LOST, 10)
+        machine.feed(STATE_LOST, BRAKE_CYCLES + 10)
         self.assertEqual(machine.run, RUN_TURN)
         self.assertEqual(machine.turn_diff, -TURN90)
 
@@ -235,22 +246,22 @@ class RouteMachineTests(unittest.TestCase):
 
         machine.feed(STATE_RIGHT_90_A, 1)
         actions.append(machine.locked_act)
-        self.assertEqual(machine.turn_diff, -TURN90)
+        self.assertEqual(machine.run, RUN_BRAKE)
         finish_turn(machine)
 
         machine.feed(STATE_CROSS, 2)
         actions.append(machine.locked_act)
-        self.assertEqual(machine.turn_diff, TURN90)
+        self.assertEqual(machine.run, RUN_BRAKE)
         finish_turn(machine, gap=STATE_LEFT_SMALL)
 
         machine.feed(STATE_LEFT_90_A, 1)
         actions.append(machine.locked_act)
-        self.assertEqual(machine.turn_diff, TURN90)
+        self.assertEqual(machine.run, RUN_BRAKE)
         finish_turn(machine, gap=STATE_LEFT_SMALL)
 
         machine.feed(STATE_CROSS, 2)
         actions.append(machine.locked_act)
-        self.assertEqual(machine.turn_diff, -TURN90)
+        self.assertEqual(machine.run, RUN_BRAKE)
         finish_turn(machine)
 
         self.assertEqual(machine.run, RUN_PATROL)
@@ -273,12 +284,12 @@ class RouteMachineTests(unittest.TestCase):
         finish_turn(machine)
         machine.feed(STATE_CROSS, 20)
         self.assertEqual(machine.index, 2)
-        self.assertEqual(machine.run, RUN_TURN)
+        self.assertIn(machine.run, (RUN_BRAKE, RUN_TURN))
 
     def test_turn_timeout_keeps_searching_left_instead_of_freezing(self):
         machine = leave_start()
         machine.feed(STATE_RIGHT_90_A, 1)
-        machine.feed(STATE_LOST, TURN_TIMEOUT_CYCLES)
+        machine.feed(STATE_LOST, BRAKE_CYCLES + TURN_TIMEOUT_CYCLES)
         self.assertEqual(machine.run, RUN_SEARCH)
         self.assertEqual(machine.last_side, SIDE_LEFT)
         self.assertEqual(machine.turn_diff, -TURN_MAX)
