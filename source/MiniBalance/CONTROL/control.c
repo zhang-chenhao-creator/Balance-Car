@@ -1,61 +1,61 @@
 /***********************************************
-¹«Ë¾£ºÂÖÈ¤¿Æ¼¼(¶«Ý¸)ÓÐÏÞ¹«Ë¾
-Æ·ÅÆ£ºWHEELTEC
-¹ÙÍø£ºwheeltec.net
-ÌÔ±¦µêÆÌ£ºshop114407458.taobao.com 
-ËÙÂôÍ¨: https://minibalance.aliexpress.com/store/4455017
-°æ±¾£ºV1.0
-ÐÞ¸ÄÊ±¼ä£º2022-09-05
+ï¿½ï¿½Ë¾ï¿½ï¿½ï¿½ï¿½È¤ï¿½Æ¼ï¿½(ï¿½ï¿½Ý¸)ï¿½ï¿½ï¿½Þ¹ï¿½Ë¾
+Æ·ï¿½Æ£ï¿½WHEELTEC
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½wheeltec.net
+ï¿½Ô±ï¿½ï¿½ï¿½ï¿½Ì£ï¿½shop114407458.taobao.com 
+ï¿½ï¿½ï¿½ï¿½Í¨: https://minibalance.aliexpress.com/store/4455017
+ï¿½æ±¾ï¿½ï¿½V1.0
+ï¿½Þ¸ï¿½Ê±ï¿½ä£º2022-09-05
 
 Brand: WHEELTEC
 Website: wheeltec.net
 Taobao shop: shop114407458.taobao.com 
 Aliexpress: https://minibalance.aliexpress.com/store/4455017
 Version: V1.0
-Update£º2022-09-05
+Updateï¿½ï¿½2022-09-05
 
 All rights reserved
 ***********************************************/
-#include "control.h"	//¿ØÖÆº¯Êý
-#include "TrackModule.h"	//ºìÍâÑ²ÏßÄ£¿é(4Â·Êý×ÖÁ¿Ñ°¼£,ÓëPS2¹²ÓÃÀ©Õ¹½Ó¿Ú)
+#include "control.h"	//ï¿½ï¿½ï¿½Æºï¿½ï¿½ï¿½
+#include "TrackModule.h"	//ï¿½ï¿½ï¿½ï¿½Ñ²ï¿½ï¿½Ä£ï¿½ï¿½(4Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ°ï¿½ï¿½,ï¿½ï¿½PS2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½Ó¿ï¿½)
 short Accel_Y,Accel_Z,Accel_X,Accel_Angle_x,Accel_Angle_y,Gyro_X,Gyro_Z,Gyro_Y;
 /**************************************************************************
 Function: Control function
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºËùÓÐµÄ¿ØÖÆ´úÂë¶¼ÔÚÕâÀïÃæ
-         5msÍâ²¿ÖÐ¶ÏÓÉMPU6050µÄINTÒý½Å´¥·¢
-         ÑÏ¸ñ±£Ö¤²ÉÑùºÍÊý¾Ý´¦ÀíµÄÊ±¼äÍ¬²½	
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ				 
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ÐµÄ¿ï¿½ï¿½Æ´ï¿½ï¿½ë¶¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+         5msï¿½â²¿ï¿½Ð¶ï¿½ï¿½ï¿½MPU6050ï¿½ï¿½INTï¿½ï¿½ï¿½Å´ï¿½ï¿½ï¿½
+         ï¿½Ï¸ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Í¬ï¿½ï¿½	
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½				 
 **************************************************************************/
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) 
 { 		
-	static int Voltage_Temp,Voltage_Count,Voltage_All;		//µçÑ¹²âÁ¿Ïà¹Ø±äÁ¿
-	static u8 Flag_Target;																//¿ØÖÆº¯ÊýÏà¹Ø±äÁ¿£¬Ìá¹©10ms»ù×¼
-	int Balance_Pwm,Velocity_Pwm,Turn_Pwm;		  					//Æ½ºâ»·PWM±äÁ¿£¬ËÙ¶È»·PWM±äÁ¿£¬×ªÏò»·PWM±ä
+	static int Voltage_Temp,Voltage_Count,Voltage_All;		//ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø±ï¿½ï¿½ï¿½
+	static u8 Flag_Target;																//ï¿½ï¿½ï¿½Æºï¿½ï¿½ï¿½ï¿½ï¿½Ø±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹©10msï¿½ï¿½×¼
+	int Balance_Pwm,Velocity_Pwm,Turn_Pwm;		  					//Æ½ï¿½â»·PWMï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È»ï¿½PWMï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½PWMï¿½ï¿½
 	if(GPIO_Pin==GPIO_PIN_9)
 	{
-		if(Time_count < START_DELAY)   //¿ª»úÇ°3Ãë(600*5ms): MPU6050Êý¾Ý²»ÎÈ¶¨, ½ûÓÃÊý¾ÝÓë¿ØÖÆ
+		if(Time_count < START_DELAY)   //ï¿½ï¿½ï¿½ï¿½Ç°3ï¿½ï¿½(600*5ms): MPU6050ï¿½ï¿½ï¿½Ý²ï¿½ï¿½È¶ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		{
 			Time_count++;
-			if(delay_flag==1)          //Î¬³ÖÖ÷Ñ­»·50ms½ÚÅÄ(DataScopeÊ¾²¨Æ÷ÓÃ),±ÜÃâËÀµÈ
+			if(delay_flag==1)          //Î¬ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½50msï¿½ï¿½ï¿½ï¿½(DataScopeÊ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½),ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			{
 				if(++delay_50==10) delay_50=0,delay_flag=0;
 			}
-			Set_Pwm(0,0);                //ÎÈ¶¨ÆÚÄÚµç»úÇ¿ÖÆÍ£×ª(²î·ÖPWM=7200/7200)
+			Set_Pwm(0,0);                //ï¿½È¶ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½Ç¿ï¿½ï¿½Í£×ª(ï¿½ï¿½ï¿½PWM=7200/7200)
 			return;
 		}
 		Flag_Target=!Flag_Target;
-		Encoder_Left=Read_Encoder(4);            					  //¶ÁÈ¡×óÂÖ±àÂëÆ÷µÄÖµ£¬Ç°½øÎªÕý£¬ºóÍËÎª¸º
-		Encoder_Right=-Read_Encoder(8);           					//¶ÁÈ¡ÓÒÂÖ±àÂëÆ÷µÄÖµ£¬Ç°½øÎªÕý£¬ºóÍËÎª¸º
-																												//×óÂÖAÏà½ÓTIM4_CH1,ÓÒÂÖAÏà½ÓTIM8_CH1,¹ÊÕâÀïÁ½¸ö±àÂëÆ÷µÄ¼«ÐÔ²»ÏàÍ¬
-		Get_Angle(Way_Angle);                     					//¸üÐÂ×ËÌ¬£¬5msÒ»´Î£¬¸ü¸ßµÄ²ÉÑùÆµÂÊ¿ÉÒÔ¸ÄÉÆ¿¨¶ûÂüÂË²¨ºÍ»¥²¹ÂË²¨µÄÐ§¹û
-		Mode_Choose();                                      //Ð¡³µÄ£Ê½µÄÑ¡Ôñ
-		Get_Velocity_Form_Encoder(Encoder_Left,Encoder_Right);//±àÂëÆ÷¶ÁÊý×ªËÙ¶È£¨mm/s£©
+		Encoder_Left=Read_Encoder(4);            					  //ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½Ç°ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½
+		Encoder_Right=-Read_Encoder(8);           					//ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½Ç°ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½
+																												//ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½TIM4_CH1,ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½TIM8_CH1,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ô²ï¿½ï¿½ï¿½Í¬
+		Get_Angle(Way_Angle);                     					//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½5msÒ»ï¿½Î£ï¿½ï¿½ï¿½ï¿½ßµÄ²ï¿½ï¿½ï¿½Æµï¿½Ê¿ï¿½ï¿½Ô¸ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ï¿½ï¿½Ð§ï¿½ï¿½
+		Mode_Choose();                                      //Ð¡ï¿½ï¿½Ä£Ê½ï¿½ï¿½Ñ¡ï¿½ï¿½
+		Get_Velocity_Form_Encoder(Encoder_Left,Encoder_Right);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½Ù¶È£ï¿½mm/sï¿½ï¿½
 		if(delay_flag==1)
 		{
-			if(++delay_50==10)	 delay_50=0,delay_flag=0;  		//¸øÖ÷º¯ÊýÌá¹©50msµÄ¾«×¼ÑÓÊ±£¬Ê¾²¨Æ÷ÐèÒª50ms¸ß¾«¶ÈÑÓÊ±
+			if(++delay_50==10)	 delay_50=0,delay_flag=0;  		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹©50msï¿½Ä¾ï¿½×¼ï¿½ï¿½Ê±ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òª50msï¿½ß¾ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
 		}
 		if(++Ros_count == 10)
 		{	
@@ -63,185 +63,188 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			Ros_send_flag=1;
 			Ros_count=0;
 		}
-		if(Flag_Target==1)                        					//10ms¿ØÖÆÒ»´Î
+		if(Flag_Target==1)                        					//10msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
 		{		
-			Voltage_Temp=Get_battery_volt();		    					//¶ÁÈ¡µç³ØµçÑ¹		
-			Voltage_Count++;                       						//Æ½¾ùÖµ¼ÆÊýÆ÷
-			Voltage_All+=Voltage_Temp;              					//¶à´Î²ÉÑùÀÛ»ý
-			if(Voltage_Count==100) Voltage=Voltage_All/100,Voltage_All=0,Voltage_Count=0;//ÇóÆ½¾ùÖµ			                                               
-		}                                         					//10ms¿ØÖÆÒ»´Î
+			Voltage_Temp=Get_battery_volt();		    					//ï¿½ï¿½È¡ï¿½ï¿½Øµï¿½Ñ¹		
+			Voltage_Count++;                       						//Æ½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+			Voltage_All+=Voltage_Temp;              					//ï¿½ï¿½Î²ï¿½ï¿½ï¿½ï¿½Û»ï¿½
+			if(Voltage_Count==100) Voltage=Voltage_All/100,Voltage_All=0,Voltage_Count=0;//ï¿½ï¿½Æ½ï¿½ï¿½Öµ			                                               
+		}                                         					//10msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
         if(Mode==Ultrasonic_Avoid_Mode||Mode==Ultrasonic_Follow_Mode)		
-	       Read_Distane();                                  //³¬Éù²¨¶ÁÈ¡¾àÀë   
-		Select_Zhongzhi();                                  //»úÐµÖÐÖµµÄÑ¡Ôñ
-		Normal();                                           //ÆÕÍ¨Ä£Ê½
-		Lidar_Avoid();                                      //À×´ï±ÜÕÏÄ£Ê½
-		Lidar_Follow();                                     //À×´ï¸úËæÄ£Ê½
-		Lidar_Straight();                                   //À×´ï×ßÖ±ÏßÄ£Ê½ 
-		ELE_Mode();                                         //µç´ÅÑ­¼£Ä£Ê½
-		CCD_Mode();                                         //CCDÑ²ÏßÄ£Ê½ÔËÐÐ
-		if(Mode==Track_Line_Patrol_Mode)  IRDM_line_inspection();//ºìÍâÑ²Ïß(4Â·Ñ°¼£Ä£¿é)
-		if(Mode==Normal_Mode)	Led_Flash(100);               //LEDÉÁË¸;³£¹æÄ£Ê½ 1s¸Ä±äÒ»´ÎÖ¸Ê¾µÆµÄ×´Ì¬	
-		else Led_Flash(0);                                  //LED³£ÁÁ;ÆäÓàÄ£Ê½	
-		Balance_Pwm=Balance(Angle_Balance,Gyro_Balance);    //Æ½ºâPID¿ØÖÆ Gyro_BalanceÆ½ºâ½ÇËÙ¶È¼«ÐÔ£ºÇ°ÇãÎªÕý£¬ºóÇãÎª¸º
-		Velocity_Pwm=Velocity(Encoder_Left,Encoder_Right);  //ËÙ¶È»·PID¿ØÖÆ	¼Ç×¡£¬ËÙ¶È·´À¡ÊÇÕý·´À¡£¬¾ÍÊÇÐ¡³µ¿ìµÄÊ±ºòÒªÂýÏÂÀ´¾ÍÐèÒªÔÙÅÜ¿ìÒ»µã
-		if(Mode ==CCD_Line_Patrol_Mode)                     //CCDÑ­¼£ÏÂµÄ×ªÏò»·¿ØÖÆ 
+	       Read_Distane();                                  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½   
+		Select_Zhongzhi();                                  //ï¿½ï¿½Ðµï¿½ï¿½Öµï¿½ï¿½Ñ¡ï¿½ï¿½
+		Normal();                                           //ï¿½ï¿½Í¨Ä£Ê½
+		Lidar_Avoid();                                      //ï¿½×´ï¿½ï¿½ï¿½ï¿½Ä£Ê½
+		Lidar_Follow();                                     //ï¿½×´ï¿½ï¿½ï¿½ï¿½Ä£Ê½
+		Lidar_Straight();                                   //ï¿½×´ï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ä£Ê½ 
+		ELE_Mode();                                         //ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½Ä£Ê½
+		CCD_Mode();                                         //CCDÑ²ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½
+		if(Mode==Track_Line_Patrol_Mode)  IRDM_line_inspection();//ï¿½ï¿½ï¿½ï¿½Ñ²ï¿½ï¿½(4Â·Ñ°ï¿½ï¿½Ä£ï¿½ï¿½)
+		if(Mode==Normal_Mode)	Led_Flash(100);               //LEDï¿½ï¿½Ë¸;ï¿½ï¿½ï¿½ï¿½Ä£Ê½ 1sï¿½Ä±ï¿½Ò»ï¿½ï¿½Ö¸Ê¾ï¿½Æµï¿½×´Ì¬	
+		else Led_Flash(0);                                  //LEDï¿½ï¿½ï¿½ï¿½;ï¿½ï¿½ï¿½ï¿½Ä£Ê½	
+		Balance_Pwm=Balance(Angle_Balance,Gyro_Balance);    //Æ½ï¿½ï¿½PIDï¿½ï¿½ï¿½ï¿½ Gyro_BalanceÆ½ï¿½ï¿½ï¿½ï¿½Ù¶È¼ï¿½ï¿½Ô£ï¿½Ç°ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½
+		Velocity_Pwm=Velocity(Encoder_Left,Encoder_Right);  //ï¿½Ù¶È»ï¿½PIDï¿½ï¿½ï¿½ï¿½	ï¿½ï¿½×¡ï¿½ï¿½ï¿½Ù¶È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ü¿ï¿½Ò»ï¿½ï¿½
+		if(Mode ==CCD_Line_Patrol_Mode)                     //CCDÑ­ï¿½ï¿½ï¿½Âµï¿½×ªï¿½ò»·¿ï¿½ï¿½ï¿½ 
 			Turn_Pwm=CCD_turn(CCD_Zhongzhi,Gyro_Turn);
 		else if(Mode==ELE_Line_Patrol_Mode)
 			Turn_Pwm=ELE_turn(Encoder_Left,Encoder_Right,Gyro_Turn);
 		else
-		  Turn_Pwm=Turn(Gyro_Turn);													//×ªÏò»·PID¿ØÖÆ     
+		  Turn_Pwm=Turn(Gyro_Turn);													//×ªï¿½ï¿½PIDï¿½ï¿½ï¿½ï¿½     
 		
 
-		Motor_Left=Balance_Pwm+Velocity_Pwm+Turn_Pwm;       //¼ÆËã×óÂÖµç»ú×îÖÕPWM
-		Motor_Right=Balance_Pwm+Velocity_Pwm-Turn_Pwm;      //¼ÆËãÓÒÂÖµç»ú×îÖÕPWM
-																												//PWMÖµÕýÊýÊ¹Ð¡³µÇ°½ø£¬¸ºÊýÊ¹Ð¡³µºóÍË
+		Motor_Left=Balance_Pwm+Velocity_Pwm+Turn_Pwm;       //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PWM
+		Motor_Right=Balance_Pwm+Velocity_Pwm-Turn_Pwm;      //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PWM
+																												//PWMÖµï¿½ï¿½ï¿½ï¿½Ê¹Ð¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		Motor_Left=PWM_Limit(Motor_Left,6900,-6900);
-		Motor_Right=PWM_Limit(Motor_Right,6900,-6900);			//PWMÏÞ·ù
+		Motor_Right=PWM_Limit(Motor_Right,6900,-6900);			//PWMï¿½Þ·ï¿½
 
-		if(Pick_Up(Acceleration_Z,Angle_Balance,Encoder_Left,Encoder_Right))//¼ì²éÊÇ·ñÐ¡³µ±»ÄÃÆð
-			Pick_up_stop=1;	                           					//Èç¹û±»ÄÃÆð¾Í¹Ø±Õµç»ú
-		if(Put_Down(Angle_Balance,Encoder_Left,Encoder_Right))//¼ì²éÊÇ·ñÐ¡³µ±»·ÅÏÂ
-			Pick_up_stop=0;	                           					//Èç¹û±»·ÅÏÂ¾ÍÆô¶¯µç»ú
-		if(Turn_Off(Angle_Balance,Voltage)==0)     					//Èç¹û²»´æÔÚÒì³£
-			Set_Pwm(Motor_Left,Motor_Right);         					//¸³Öµ¸øPWM¼Ä´æÆ÷  
+		if(Pick_Up(Acceleration_Z,Angle_Balance,Encoder_Left,Encoder_Right))//ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		{
+			if(Pick_up_stop==0) Track_ResetLogic();
+			Pick_up_stop=1;	                           					//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¹Ø±Õµï¿½ï¿½
+		}
+		if(Put_Down(Angle_Balance,Encoder_Left,Encoder_Right))//ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+			Pick_up_stop=0;	                           					//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		if(Turn_Off(Angle_Balance,Voltage)==0)     					//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì³£
+			Set_Pwm(Motor_Left,Motor_Right);         					//ï¿½ï¿½Öµï¿½ï¿½PWMï¿½Ä´ï¿½ï¿½ï¿½  
 	 }       	  
 } 
 
 /**************************************************************************
 Function: Vertical PD control
-Input   : Angle:angle£»Gyro£ºangular velocity
-Output  : balance£ºVertical control PWM
-º¯Êý¹¦ÄÜ£ºÖ±Á¢PD¿ØÖÆ		
-Èë¿Ú²ÎÊý£ºAngle:½Ç¶È£»Gyro£º½ÇËÙ¶È
-·µ»Ø  Öµ£ºbalance£ºÖ±Á¢¿ØÖÆPWM
+Input   : Angle:angleï¿½ï¿½Gyroï¿½ï¿½angular velocity
+Output  : balanceï¿½ï¿½Vertical control PWM
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½Ö±ï¿½ï¿½PDï¿½ï¿½ï¿½ï¿½		
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½Angle:ï¿½Ç¶È£ï¿½Gyroï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½balanceï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PWM
 **************************************************************************/	
 int Balance(float Angle,float Gyro)
 {  
    float Angle_bias,Gyro_bias;
 	 int balance;
-	 Angle_bias=Middle_angle-Angle;                       				//Çó³öÆ½ºâµÄ½Ç¶ÈÖÐÖµ ºÍ»úÐµÏà¹Ø
+	 Angle_bias=Middle_angle-Angle;                       				//ï¿½ï¿½ï¿½Æ½ï¿½ï¿½Ä½Ç¶ï¿½ï¿½ï¿½Öµ ï¿½Í»ï¿½Ðµï¿½ï¿½ï¿½
 	 Gyro_bias=0-Gyro; 
-	 balance=-Balance_Kp/100*Angle_bias-Gyro_bias*Balance_Kd/100; //¼ÆËãÆ½ºâ¿ØÖÆµÄµç»úPWM  PD¿ØÖÆ   kpÊÇPÏµÊý kdÊÇDÏµÊý 
+	 balance=-Balance_Kp/100*Angle_bias-Gyro_bias*Balance_Kd/100; //ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ÆµÄµï¿½ï¿½PWM  PDï¿½ï¿½ï¿½ï¿½   kpï¿½ï¿½PÏµï¿½ï¿½ kdï¿½ï¿½DÏµï¿½ï¿½ 
 	 return balance;
 }
 
 /**************************************************************************
 Function: Speed PI control
-Input   : encoder_left£ºLeft wheel encoder reading£»encoder_right£ºRight wheel encoder reading
+Input   : encoder_leftï¿½ï¿½Left wheel encoder readingï¿½ï¿½encoder_rightï¿½ï¿½Right wheel encoder reading
 Output  : Speed control PWM
-º¯Êý¹¦ÄÜ£ºËÙ¶È¿ØÖÆPWM		
-Èë¿Ú²ÎÊý£ºencoder_left£º×óÂÖ±àÂëÆ÷¶ÁÊý£»encoder_right£ºÓÒÂÖ±àÂëÆ÷¶ÁÊý
-·µ»Ø  Öµ£ºËÙ¶È¿ØÖÆPWM
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½Ù¶È¿ï¿½ï¿½ï¿½PWM		
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½encoder_leftï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½encoder_rightï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½Ù¶È¿ï¿½ï¿½ï¿½PWM
 **************************************************************************/
-//ÐÞ¸ÄÇ°½øºóÍËËÙ¶È£¬ÇëÐÞ¸ÄTarget_Velocity£¬±ÈÈç£¬¸Ä³É60¾Í±È½ÏÂýÁË
+//ï¿½Þ¸ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È£ï¿½ï¿½ï¿½ï¿½Þ¸ï¿½Target_Velocityï¿½ï¿½ï¿½ï¿½ï¿½ç£¬ï¿½Ä³ï¿½60ï¿½Í±È½ï¿½ï¿½ï¿½ï¿½ï¿½
 int Velocity(int encoder_left,int encoder_right)
 {  
     static float velocity,Encoder_Least,Encoder_bias,Movement;
 	  static float Encoder_Integral;
-	  //================Ò£¿ØÇ°½øºóÍË²¿·Ö====================// 
+	  //================Ò£ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ï¿½ï¿½====================// 
     if(Mode==Track_Line_Patrol_Mode)
-			Movement=base_speed_mm/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;  //ºìÍâÑ²Ïß: Ä¿±êËÙ¶È=Ñ²ÏßÄ£¿ébase_speed_mm(mm/s)
-		else if(Flag_front==1)		Movement=Target_Velocity/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;  //ÊÕµ½Ç°½øÐÅºÅ
-		else if(Flag_back==1)	Movement=-Target_Velocity/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;  //ÊÕµ½ºóÍËÐÅºÅ
-	  else  Movement=Move_X/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;//½«¸ø¶¨ËÙ¶È×ª»¯Îªµç»úµÄ±àÂëÆ÷¶ÁÊýµ¥Î»;
-          //Movement=Move_X/ÖÜ³¤/±àÂëÆ÷¶ÁÈ¡ÆµÂÊ*ÆµÊý*¼õËÙ±È*¾«¶È*2;	
-	  if(Movement>2400)  Movement=2400;                     //À¶ÑÀÒ£¿ØËÙ¶ÈµÄÏÞÖÆ£¬±ÜÃâÆÆ»µÐ¡³µµÄÆ½ºâ
+			Movement=base_speed_mm/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;  //ï¿½ï¿½ï¿½ï¿½Ñ²ï¿½ï¿½: Ä¿ï¿½ï¿½ï¿½Ù¶ï¿½=Ñ²ï¿½ï¿½Ä£ï¿½ï¿½base_speed_mm(mm/s)
+		else if(Flag_front==1)		Movement=Target_Velocity/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;  //ï¿½Õµï¿½Ç°ï¿½ï¿½ï¿½Åºï¿½
+		else if(Flag_back==1)	Movement=-Target_Velocity/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;  //ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½
+	  else  Movement=Move_X/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»;
+          //Movement=Move_X/ï¿½Ü³ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡Æµï¿½ï¿½*Æµï¿½ï¿½*ï¿½ï¿½ï¿½Ù±ï¿½*ï¿½ï¿½ï¿½ï¿½*2;	
+	  if(Movement>2400)  Movement=2400;                     //ï¿½ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½Ù¶Èµï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ»ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½
 	  
-	//=============³¬Éù²¨¹¦ÄÜ£¨¸úËæ/±ÜÕÏ£©==================// 
-	  if(Mode==Ultrasonic_Follow_Mode&&(Distance>200&&Distance<500)&&Flag_Left!=1&&Flag_Right!=1) //¸úËæ
-			 Movement=Target_Velocity/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;	  //ÊÕµ½Ç°½øÐÅºÅ
+	//=============ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½Ï£ï¿½==================// 
+	  if(Mode==Ultrasonic_Follow_Mode&&(Distance>200&&Distance<500)&&Flag_Left!=1&&Flag_Right!=1) //ï¿½ï¿½ï¿½ï¿½
+			 Movement=Target_Velocity/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;	  //ï¿½Õµï¿½Ç°ï¿½ï¿½ï¿½Åºï¿½
 		if(Mode==Ultrasonic_Follow_Mode&&Distance<200&&Flag_Left!=1&&Flag_Right!=1) 
-			 Movement=-Target_Velocity/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;	  //ÊÕµ½Ç°½øÐÅºÅ
-		if(Mode==Ultrasonic_Avoid_Mode&&Distance<450&&Flag_Left!=1&&Flag_Right!=1)  //³¬Éù²¨±ÜÕÏ
-			 Movement=-Target_Velocity/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;	  //ÊÕµ½Ç°½øÐÅºÅ
+			 Movement=-Target_Velocity/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;	  //ï¿½Õµï¿½Ç°ï¿½ï¿½ï¿½Åºï¿½
+		if(Mode==Ultrasonic_Avoid_Mode&&Distance<450&&Flag_Left!=1&&Flag_Right!=1)  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+			 Movement=-Target_Velocity/Perimeter/Control_Frequency*EncoderMultiples*Reduction_Ratio*Encoder_precision*2;	  //ï¿½Õµï¿½Ç°ï¿½ï¿½ï¿½Åºï¿½
 		
-   //================ËÙ¶ÈPI¿ØÖÆÆ÷=====================//	
-		Encoder_Least =0-(encoder_left+encoder_right);                    //»ñÈ¡×îÐÂËÙ¶ÈÆ«²î=Ä¿±êËÙ¶È£¨´Ë´¦ÎªÁã£©-²âÁ¿ËÙ¶È£¨×óÓÒ±àÂëÆ÷Ö®ºÍ£© 
-		Encoder_bias *= 0.84;		                                          //Ò»½×µÍÍ¨ÂË²¨Æ÷       
-		Encoder_bias += Encoder_Least*0.16;	                              //Ò»½×µÍÍ¨ÂË²¨Æ÷£¬¼õ»ºËÙ¶È±ä»¯ 
-		Encoder_Integral +=Encoder_bias;                                  //»ý·Ö³öÎ»ÒÆ »ý·ÖÊ±¼ä£º10ms
-		Encoder_Integral=Encoder_Integral+Movement;                       //½ÓÊÕÒ£¿ØÆ÷Êý¾Ý£¬¿ØÖÆÇ°½øºóÍË
-		if(Encoder_Integral>200000)  	Encoder_Integral=200000;            //»ý·ÖÏÞ·ù
-		if(Encoder_Integral<-200000)	  Encoder_Integral=-200000;         //»ý·ÖÏÞ·ù	
-		velocity=-Encoder_bias*Velocity_Kp/100-Encoder_Integral*Velocity_Ki/100;     //ËÙ¶È¿ØÖÆ
+   //================ï¿½Ù¶ï¿½PIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½=====================//	
+		Encoder_Least =0-(encoder_left+encoder_right);                    //ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½Æ«ï¿½ï¿½=Ä¿ï¿½ï¿½ï¿½Ù¶È£ï¿½ï¿½Ë´ï¿½Îªï¿½ã£©-ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È£ï¿½ï¿½ï¿½ï¿½Ò±ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½Í£ï¿½ 
+		Encoder_bias *= 0.84;		                                          //Ò»ï¿½×µï¿½Í¨ï¿½Ë²ï¿½ï¿½ï¿½       
+		Encoder_bias += Encoder_Least*0.16;	                              //Ò»ï¿½×µï¿½Í¨ï¿½Ë²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È±ä»¯ 
+		Encoder_Integral +=Encoder_bias;                                  //ï¿½ï¿½ï¿½Ö³ï¿½Î»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä£º10ms
+		Encoder_Integral=Encoder_Integral+Movement;                       //ï¿½ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		if(Encoder_Integral>200000)  	Encoder_Integral=200000;            //ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½
+		if(Encoder_Integral<-200000)	  Encoder_Integral=-200000;         //ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½	
+		velocity=-Encoder_bias*Velocity_Kp/100-Encoder_Integral*Velocity_Ki/100;     //ï¿½Ù¶È¿ï¿½ï¿½ï¿½
     if(Mode == ROS_Mode)
 		{ 
-			if(++Ros_Rate>=100) Ros_Rate=0,Move_X=0;//Èç¹ûros¶Ë200msÄÚÃ»ÓÐ·¢ËÍÊý¾Ý¹ýÀ´£¬Move_ZÖÃ0£»ÕâÊÇÎªÁËros¶Ë¿ØÖÆÐ¡³µµÄ¸ü¼ÓË³³©
+			if(++Ros_Rate>=100) Ros_Rate=0,Move_X=0;//ï¿½ï¿½ï¿½rosï¿½ï¿½200msï¿½ï¿½Ã»ï¿½Ð·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¹ï¿½ï¿½ï¿½ï¿½ï¿½Move_Zï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½rosï¿½Ë¿ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½Ë³ï¿½ï¿½
 		}
 		else Move_X	=0;	
-		if(Turn_Off(Angle_Balance,Voltage)==1||Flag_Stop==1) Encoder_Integral=0;//µç»ú¹Ø±ÕºóÇå³ý»ý·Ö
+		if(Turn_Off(Angle_Balance,Voltage)==1||Flag_Stop==1) Encoder_Integral=0;//ï¿½ï¿½ï¿½ï¿½Ø±Õºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	  return velocity;
 }
 /**************************************************************************
 Function: Turn control
 Input   : Z-axis angular velocity
 Output  : Turn control PWM
-º¯Êý¹¦ÄÜ£º×ªÏò¿ØÖÆ 
-Èë¿Ú²ÎÊý£ºZÖáÍÓÂÝÒÇ
-·µ»Ø  Öµ£º×ªÏò¿ØÖÆPWM
-×÷    Õß£ºÂÖÈ¤¿Æ¼¼£¨¶«Ý¸£©ÓÐÏÞ¹«Ë¾
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ 
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½PWM
+ï¿½ï¿½    ï¿½ß£ï¿½ï¿½ï¿½È¤ï¿½Æ¼ï¿½ï¿½ï¿½ï¿½ï¿½Ý¸ï¿½ï¿½ï¿½ï¿½ï¿½Þ¹ï¿½Ë¾
 **************************************************************************/
 int Turn(float gyro)
 {
 	 static float Turn_Target,turn,Turn_Amplitude=54;
-	 float Kp=Turn_Kp,Kd;			//ÐÞ¸Ä×ªÏòËÙ¶È£¬ÇëÐÞ¸ÄTurn_Amplitude¼´¿É
-	//===================Ò£¿Ø×óÓÒÐý×ª²¿·Ö=================//
+	 float Kp=Turn_Kp,Kd;			//ï¿½Þ¸ï¿½×ªï¿½ï¿½ï¿½Ù¶È£ï¿½ï¿½ï¿½ï¿½Þ¸ï¿½Turn_Amplitudeï¿½ï¿½ï¿½ï¿½
+	//===================Ò£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½=================//
 	 if(1==Flag_Left)	        Turn_Target=-Turn_Amplitude/Flag_velocity;
 	 else if(1==Flag_Right)	  Turn_Target=Turn_Amplitude/Flag_velocity; 
-	 else if(Mode==Track_Line_Patrol_Mode)  Turn_Target=turn_diff*Track_Turn_Scale; //ºìÍâÑ²Ïß: ×ªÏò²îËÙ(mm/s)*ÏµÊý
+	 else if(Mode==Track_Line_Patrol_Mode)  Turn_Target=turn_diff*Track_Turn_Scale; //ï¿½ï¿½ï¿½ï¿½Ñ²ï¿½ï¿½: ×ªï¿½ï¿½ï¿½ï¿½ï¿½(mm/s)*Ïµï¿½ï¿½
 		 else Turn_Target=0;
-		 if(1==Flag_front||1==Flag_back||Mode==Track_Line_Patrol_Mode)  Kd=Turn_Kd; //ºìÍâÑ²Ïß: ±£ÁôÍÓÂÝÒÇ×èÄá
-	 else Kd=0;   //×ªÏòµÄÊ±ºòÈ¡ÏûÍÓÂÝÒÇµÄ¾ÀÕý ÓÐµãÄ£ºýPIDµÄË¼Ïë
-  //===================×ªÏòPD¿ØÖÆÆ÷=================//
-	 turn=Turn_Target*Kp/100+gyro*Kd/100+Move_Z;//½áºÏZÖáÍÓÂÝÒÇ½øÐÐPD¿ØÖÆ
+		 if(1==Flag_front||1==Flag_back||Mode==Track_Line_Patrol_Mode)  Kd=Turn_Kd; //ï¿½ï¿½ï¿½ï¿½Ñ²ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	 else Kd=0;   //×ªï¿½ï¿½ï¿½Ê±ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÇµÄ¾ï¿½ï¿½ï¿½ ï¿½Ðµï¿½Ä£ï¿½ï¿½PIDï¿½ï¿½Ë¼ï¿½ï¿½
+  //===================×ªï¿½ï¿½PDï¿½ï¿½ï¿½ï¿½ï¿½ï¿½=================//
+	 turn=Turn_Target*Kp/100+gyro*Kd/100+Move_Z;//ï¿½ï¿½ï¿½Zï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç½ï¿½ï¿½ï¿½PDï¿½ï¿½ï¿½ï¿½
    if(Mode == ROS_Mode)
 	 {
-		 if(++Ros_Rate>=40) Ros_Rate=0,Move_Z=0;//Èç¹ûros¶Ë200msÃ»ÓÐ·¢ËÍÊý¾Ý¹ýÀ´£¬Move_ZÖÃ0£»ÕâÊÇÎªÁËros¶Ë¿ØÖÆÐ¡³µµÄ¸ü¼ÓË³³©
+		 if(++Ros_Rate>=40) Ros_Rate=0,Move_Z=0;//ï¿½ï¿½ï¿½rosï¿½ï¿½200msÃ»ï¿½Ð·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¹ï¿½ï¿½ï¿½ï¿½ï¿½Move_Zï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½rosï¿½Ë¿ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½Ë³ï¿½ï¿½
 	 }
 	 else Move_Z=0;
-	 return turn;								 				 //×ªÏò»·PWMÓÒ×ªÎªÕý£¬×ó×ªÎª¸º
+	 return turn;								 				 //×ªï¿½ï¿½PWMï¿½ï¿½×ªÎªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªÎªï¿½ï¿½
 }
 
 /**************************************************************************
 Function: Assign to PWM register
-Input   : motor_left£ºLeft wheel PWM£»motor_right£ºRight wheel PWM
+Input   : motor_leftï¿½ï¿½Left wheel PWMï¿½ï¿½motor_rightï¿½ï¿½Right wheel PWM
 Output  : none
-º¯Êý¹¦ÄÜ£º¸³Öµ¸øPWM¼Ä´æÆ÷
-Èë¿Ú²ÎÊý£º×óÂÖPWM¡¢ÓÒÂÖPWM
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½Öµï¿½ï¿½PWMï¿½Ä´ï¿½ï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PWMï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PWM
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 void Set_Pwm(int motor_left,int motor_right)
 {
   if(motor_left>0)		
 	{
 		PWMA_IN1=7200;
-		PWMA_IN2=7200-motor_left;//×óÂÖÇ°½ø
+		PWMA_IN2=7200-motor_left;//ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½
 	}		
 	else 
 	{
 		PWMA_IN1=7200+motor_left;
 		PWMA_IN2=7200;
-	} //×óÂÖºóÍË
+	} //ï¿½ï¿½ï¿½Öºï¿½ï¿½ï¿½
   if(motor_right>0)			
 	{
 		PWMB_IN1=7200-motor_right;
 		PWMB_IN2=7200;
-	}		//ÓÒÂÖÇ°½ø
+	}		//ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½
 	else 	        			  
 	{
 		PWMB_IN1=7200;
 		PWMB_IN2=7200+motor_right;
 
-	}//ÓÒÂÖºóÍË
+	}//ï¿½ï¿½ï¿½Öºï¿½ï¿½ï¿½
 	
 }
 /**************************************************************************
 Function: PWM limiting range
-Input   : IN£ºInput  max£ºMaximum value  min£ºMinimum value
+Input   : INï¿½ï¿½Input  maxï¿½ï¿½Maximum value  minï¿½ï¿½Minimum value
 Output  : Output
-º¯Êý¹¦ÄÜ£ºÏÞÖÆPWM¸³Öµ 
-Èë¿Ú²ÎÊý£ºIN£ºÊäÈë²ÎÊý  max£ºÏÞ·ù×î´óÖµ  min£ºÏÞ·ù×îÐ¡Öµ
-·µ»Ø  Öµ£ºÏÞ·ùºóµÄÖµ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½PWMï¿½ï¿½Öµ 
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½INï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  maxï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½Öµ  minï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½Ð¡Öµ
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½Öµ
 **************************************************************************/
 int PWM_Limit(int IN,int max,int min)
 {
@@ -254,21 +257,21 @@ int PWM_Limit(int IN,int max,int min)
 
 /**************************************************************************
 Function: If abnormal, turn off the motor
-Input   : angle£ºCar inclination£»voltage£ºVoltage
-Output  : 1£ºabnormal£»0£ºnormal
-º¯Êý¹¦ÄÜ£ºÒì³£¹Ø±Õµç»ú		
-Èë¿Ú²ÎÊý£ºangle£ºÐ¡³µÇã½Ç£»voltage£ºµçÑ¹
-·µ»Ø  Öµ£º1£ºÒì³£  0£ºÕý³£
+Input   : angleï¿½ï¿½Car inclinationï¿½ï¿½voltageï¿½ï¿½Voltage
+Output  : 1ï¿½ï¿½abnormalï¿½ï¿½0ï¿½ï¿½normal
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ì³£ï¿½Ø±Õµï¿½ï¿½		
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½angleï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Ç£ï¿½voltageï¿½ï¿½ï¿½ï¿½Ñ¹
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½1ï¿½ï¿½ï¿½ì³£  0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 **************************************************************************/	
 u8 Turn_Off(float angle, int voltage)
 {
 	u8 temp;
 	Flag_Stop = KEY2_STATE;
-	if(KEY2_STATE==1) Pick_up_stop=0;                  //key2¹Ø±Õ£¬Pick_up_stop»Ö¸´Îª0
-	if(angle<-40||angle>40||1==Flag_Stop||voltage<1000||Pick_up_stop==1)//µç³ØµçÑ¹µÍÓÚ11.1V¹Ø±Õµç»ú
-	{	                                                 //Çã½Ç´óÓÚ40¶È¹Ø±Õµç»ú
-		temp=1;                                          //Flag_StopÖÃ1£¬¼´µ¥»÷¿ØÖÆ¹Ø±Õµç»ú
-		PWMA_IN1=0;                                      //Pick_up_stopÖÃ1£¬¼´Ð¡³µ»ù±¾¾²Ö¹£¬ÔÚ0¶È×óÓÒÄÃÆðÐ¡³µ 
+	if(KEY2_STATE==1) Pick_up_stop=0;                  //key2ï¿½Ø±Õ£ï¿½Pick_up_stopï¿½Ö¸ï¿½Îª0
+	if(angle<-40||angle>40||1==Flag_Stop||voltage<1000||Pick_up_stop==1)//ï¿½ï¿½Øµï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½11.1Vï¿½Ø±Õµï¿½ï¿½
+	{	                                                 //ï¿½ï¿½Ç´ï¿½ï¿½ï¿½40ï¿½È¹Ø±Õµï¿½ï¿½
+		temp=1;                                          //Flag_Stopï¿½ï¿½1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¹Ø±Õµï¿½ï¿½
+		PWMA_IN1=0;                                      //Pick_up_stopï¿½ï¿½1ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ 
 		PWMA_IN2=0;
 		PWMB_IN1=0;
 		PWMB_IN2=0;
@@ -280,66 +283,66 @@ u8 Turn_Off(float angle, int voltage)
 	
 /**************************************************************************
 Function: Get angle
-Input   : way£ºThe algorithm of getting angle 1£ºDMP  2£ºkalman  3£ºComplementary filtering
+Input   : wayï¿½ï¿½The algorithm of getting angle 1ï¿½ï¿½DMP  2ï¿½ï¿½kalman  3ï¿½ï¿½Complementary filtering
 Output  : none
-º¯Êý¹¦ÄÜ£º»ñÈ¡½Ç¶È	
-Èë¿Ú²ÎÊý£ºway£º»ñÈ¡½Ç¶ÈµÄËã·¨ 1£ºDMP  2£º¿¨¶ûÂü 3£º»¥²¹ÂË²¨
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½È¡ï¿½Ç¶ï¿½	
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½wayï¿½ï¿½ï¿½ï¿½È¡ï¿½Ç¶Èµï¿½ï¿½ã·¨ 1ï¿½ï¿½DMP  2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/	
 void Get_Angle(u8 way)
 { 
   float gyro_x,gyro_y;
-	Temperature=Read_Temperature();      //¶ÁÈ¡MPU6050ÄÚÖÃÎÂ¶È´«¸ÐÆ÷Êý¾Ý£¬½üËÆ±íÊ¾Ö÷°åÎÂ¶È¡£
-	if(way==1)                           //DMPµÄ¶ÁÈ¡ÔÚÊý¾Ý²É¼¯ÖÐ¶Ï¶ÁÈ¡£¬ÑÏ¸ñ×ñÑ­Ê±ÐòÒªÇó
+	Temperature=Read_Temperature();      //ï¿½ï¿½È¡MPU6050ï¿½ï¿½ï¿½ï¿½ï¿½Â¶È´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½Æ±ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½Â¶È¡ï¿½
+	if(way==1)                           //DMPï¿½Ä¶ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ý²É¼ï¿½ï¿½Ð¶Ï¶ï¿½È¡ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½Ñ­Ê±ï¿½ï¿½Òªï¿½ï¿½
 	{	
-		Read_DMP();                      	 //¶ÁÈ¡¼ÓËÙ¶È¡¢½ÇËÙ¶È¡¢Çã½Ç
-		Angle_Balance=Pitch;             	 //¸üÐÂÆ½ºâÇã½Ç,Ç°ÇãÎªÕý£¬ºóÇãÎª¸º
-		Gyro_Balance=gyro[0];              //¸üÐÂÆ½ºâ½ÇËÙ¶È,Ç°ÇãÎªÕý£¬ºóÇãÎª¸º
-		Gyro_Turn=gyro[2];                 //¸üÐÂ×ªÏò½ÇËÙ¶È
-		Acceleration_Z=accel[2];           //¸üÐÂZÖá¼ÓËÙ¶È¼Æ
+		Read_DMP();                      	 //ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ù¶È¡ï¿½ï¿½ï¿½ï¿½Ù¶È¡ï¿½ï¿½ï¿½ï¿½
+		Angle_Balance=Pitch;             	 //ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½,Ç°ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½
+		Gyro_Balance=gyro[0];              //ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½,Ç°ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½
+		Gyro_Turn=gyro[2];                 //ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+		Acceleration_Z=accel[2];           //ï¿½ï¿½ï¿½ï¿½Zï¿½ï¿½ï¿½ï¿½Ù¶È¼ï¿½
 	}			
 	else
 	{
-		Gyro_X=(I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_XOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_XOUT_L);    //¶ÁÈ¡XÖáÍÓÂÝÒÇ
-		Gyro_Y=(I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_YOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_YOUT_L);    //¶ÁÈ¡YÖáÍÓÂÝÒÇ
-		Gyro_Z=(I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_ZOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_ZOUT_L);    //¶ÁÈ¡ZÖáÍÓÂÝÒÇ
-		Accel_X=(I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_XOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_XOUT_L); //¶ÁÈ¡XÖá¼ÓËÙ¶È¼Æ
-		Accel_Y=(I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_YOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_YOUT_L); //¶ÁÈ¡XÖá¼ÓËÙ¶È¼Æ
-		Accel_Z=(I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_ZOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_ZOUT_L); //¶ÁÈ¡ZÖá¼ÓËÙ¶È¼Æ
-//		if(Gyro_X>32768)  Gyro_X-=65536;                 //Êý¾ÝÀàÐÍ×ª»»  Ò²¿ÉÍ¨¹ýshortÇ¿ÖÆÀàÐÍ×ª»»
-//		if(Gyro_Y>32768)  Gyro_Y-=65536;                 //Êý¾ÝÀàÐÍ×ª»»  Ò²¿ÉÍ¨¹ýshortÇ¿ÖÆÀàÐÍ×ª»»
-//		if(Gyro_Z>32768)  Gyro_Z-=65536;                 //Êý¾ÝÀàÐÍ×ª»»
-//		if(Accel_X>32768) Accel_X-=65536;                //Êý¾ÝÀàÐÍ×ª»»
-//		if(Accel_Y>32768) Accel_Y-=65536;                //Êý¾ÝÀàÐÍ×ª»»
-//		if(Accel_Z>32768) Accel_Z-=65536;                //Êý¾ÝÀàÐÍ×ª»»
-		Gyro_Balance=-Gyro_X;                            //¸üÐÂÆ½ºâ½ÇËÙ¶È
-		Accel_Angle_x=atan2(Accel_Y,Accel_Z)*180/PI;     //¼ÆËãÇã½Ç£¬×ª»»µ¥Î»Îª¶È	
-		Accel_Angle_y=atan2(Accel_X,Accel_Z)*180/PI;     //¼ÆËãÇã½Ç£¬×ª»»µ¥Î»Îª¶È
-		gyro_x=Gyro_X/16.4;                              //ÍÓÂÝÒÇÁ¿³Ì×ª»»£¬Á¿³Ì¡À2000¡ã/s¶ÔÓ¦ÁéÃô¶È16.4£¬¿É²éÊÖ²á
-		gyro_y=Gyro_Y/16.4;                              //ÍÓÂÝÒÇÁ¿³Ì×ª»»	
+		Gyro_X=(I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_XOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_XOUT_L);    //ï¿½ï¿½È¡Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		Gyro_Y=(I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_YOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_YOUT_L);    //ï¿½ï¿½È¡Yï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		Gyro_Z=(I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_ZOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_GYRO_ZOUT_L);    //ï¿½ï¿½È¡Zï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		Accel_X=(I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_XOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_XOUT_L); //ï¿½ï¿½È¡Xï¿½ï¿½ï¿½ï¿½Ù¶È¼ï¿½
+		Accel_Y=(I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_YOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_YOUT_L); //ï¿½ï¿½È¡Xï¿½ï¿½ï¿½ï¿½Ù¶È¼ï¿½
+		Accel_Z=(I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_ZOUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_ACCEL_ZOUT_L); //ï¿½ï¿½È¡Zï¿½ï¿½ï¿½ï¿½Ù¶È¼ï¿½
+//		if(Gyro_X>32768)  Gyro_X-=65536;                 //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½  Ò²ï¿½ï¿½Í¨ï¿½ï¿½shortÇ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
+//		if(Gyro_Y>32768)  Gyro_Y-=65536;                 //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½  Ò²ï¿½ï¿½Í¨ï¿½ï¿½shortÇ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
+//		if(Gyro_Z>32768)  Gyro_Z-=65536;                 //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
+//		if(Accel_X>32768) Accel_X-=65536;                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
+//		if(Accel_Y>32768) Accel_Y-=65536;                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
+//		if(Accel_Z>32768) Accel_Z-=65536;                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
+		Gyro_Balance=-Gyro_X;                            //ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+		Accel_Angle_x=atan2(Accel_Y,Accel_Z)*180/PI;     //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç£ï¿½×ªï¿½ï¿½ï¿½ï¿½Î»Îªï¿½ï¿½	
+		Accel_Angle_y=atan2(Accel_X,Accel_Z)*180/PI;     //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç£ï¿½×ªï¿½ï¿½ï¿½ï¿½Î»Îªï¿½ï¿½
+		gyro_x=Gyro_X/16.4;                              //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¡ï¿½2000ï¿½ï¿½/sï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½16.4ï¿½ï¿½ï¿½É²ï¿½ï¿½Ö²ï¿½
+		gyro_y=Gyro_Y/16.4;                              //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½	
 		if(Way_Angle==2)		  	
 		{
-			 Pitch = -Kalman_Filter_x(Accel_Angle_x,gyro_x);//¿¨¶ûÂüÂË²¨
+			 Pitch = -Kalman_Filter_x(Accel_Angle_x,gyro_x);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½
 			 Roll = -Kalman_Filter_y(Accel_Angle_y,gyro_y);
 		}
 		else if(Way_Angle==3) 
 		{  
-			 Pitch = -Complementary_Filter_x(Accel_Angle_x,gyro_x);//»¥²¹ÂË²¨
+			 Pitch = -Complementary_Filter_x(Accel_Angle_x,gyro_x);//ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½
 			 Roll = -Complementary_Filter_y(Accel_Angle_y,gyro_y);
 		}
-		Angle_Balance=Pitch;                              //¸üÐÂÆ½ºâÇã½Ç
-		Gyro_Turn=Gyro_Z;                                 //¸üÐÂ×ªÏò½ÇËÙ¶È
-		Acceleration_Z=Accel_Z;                           //¸üÐÂZÖá¼ÓËÙ¶È¼Æ
+		Angle_Balance=Pitch;                              //ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½
+		Gyro_Turn=Gyro_Z;                                 //ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+		Acceleration_Z=Accel_Z;                           //ï¿½ï¿½ï¿½ï¿½Zï¿½ï¿½ï¿½ï¿½Ù¶È¼ï¿½
 	}
-	Angle_Balance += ANGLE_ZERO_OFFSET;            //Áãµã²¹³¥: Æ½ºâ×ËÌ¬¶ÁÊý¹éÁã(ºê¼ûcontrol.h, ÀýÈç-22¡ã->0¡ã)
+	Angle_Balance += ANGLE_ZERO_OFFSET;            //ï¿½ï¿½ã²¹ï¿½ï¿½: Æ½ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½control.h, ï¿½ï¿½ï¿½ï¿½-22ï¿½ï¿½->0ï¿½ï¿½)
 }
 /**************************************************************************
 Function: Absolute value function
-Input   : a£ºNumber to be converted
+Input   : aï¿½ï¿½Number to be converted
 Output  : unsigned int
-º¯Êý¹¦ÄÜ£º¾ø¶ÔÖµº¯Êý
-Èë¿Ú²ÎÊý£ºa£ºÐèÒª¼ÆËã¾ø¶ÔÖµµÄÊý
-·µ»Ø  Öµ£ºÎÞ·ûºÅÕûÐÍ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½aï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 **************************************************************************/	
 int myabs(int a)
 { 		   
@@ -350,70 +353,70 @@ int myabs(int a)
 }
 /**************************************************************************
 Function: Check whether the car is picked up
-Input   : Acceleration£ºZ-axis acceleration£»Angle£ºThe angle of balance£»encoder_left£ºLeft encoder count£»encoder_right£ºRight encoder count
-Output  : 1£ºpicked up  0£ºNo action
-º¯Êý¹¦ÄÜ£º¼ì²âÐ¡³µÊÇ·ñ±»ÄÃÆð
-Èë¿Ú²ÎÊý£ºAcceleration£ºzÖá¼ÓËÙ¶È£»Angle£ºÆ½ºâµÄ½Ç¶È£»encoder_left£º×ó±àÂëÆ÷¼ÆÊý£»encoder_right£ºÓÒ±àÂëÆ÷¼ÆÊý
-·µ»Ø  Öµ£º1:Ð¡³µ±»ÄÃÆð  0£ºÐ¡³µÎ´±»ÄÃÆð
+Input   : Accelerationï¿½ï¿½Z-axis accelerationï¿½ï¿½Angleï¿½ï¿½The angle of balanceï¿½ï¿½encoder_leftï¿½ï¿½Left encoder countï¿½ï¿½encoder_rightï¿½ï¿½Right encoder count
+Output  : 1ï¿½ï¿½picked up  0ï¿½ï¿½No action
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½Accelerationï¿½ï¿½zï¿½ï¿½ï¿½ï¿½Ù¶È£ï¿½Angleï¿½ï¿½Æ½ï¿½ï¿½Ä½Ç¶È£ï¿½encoder_leftï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½encoder_rightï¿½ï¿½ï¿½Ò±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½1:Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  0ï¿½ï¿½Ð¡ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 int Pick_Up(float Acceleration,float Angle,int encoder_left,int encoder_right)
 { 		   
 	 static u16 flag,count0,count1,count2;
-	 if(flag==0)                                                      //µÚÒ»²½
+	 if(flag==0)                                                      //ï¿½ï¿½Ò»ï¿½ï¿½
 	 {
-			if(myabs(encoder_left)+myabs(encoder_right)<300)               //Ìõ¼þ1£¬Ð¡³µ½Ó½ü¾²Ö¹
+			if(myabs(encoder_left)+myabs(encoder_right)<300)               //ï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½Ö¹
 			count0++;
 			else 
 			count0=0;		
 			if(count0>10)				
 			flag=1,count0=0; 
 	 } 
-	 if(flag==1)                                                      //½øÈëµÚ¶þ²½
+	 if(flag==1)                                                      //ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½
 	 {
-			if(++count1>200)       count1=0,flag=0;                       //³¬Ê±²»ÔÙµÈ´ý2000ms£¬·µ»ØµÚÒ»²½
-			if(Acceleration>30000&&(Angle>(-20+Middle_angle))&&(Angle<(20+Middle_angle)))   //Ìõ¼þ2£¬Ð¡³µÊÇÔÚ0¶È¸½½ü±»ÄÃÆð
+			if(++count1>200)       count1=0,flag=0;                       //ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ÙµÈ´ï¿½2000msï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½Ò»ï¿½ï¿½
+			if(Acceleration>30000&&(Angle>(-20+Middle_angle))&&(Angle<(20+Middle_angle)))   //ï¿½ï¿½ï¿½ï¿½2ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				flag=2;			
 	 } 
 	  if(flag == 2)
 	 {
-		  if(++count2>100)       count2=0,flag=0;                    //³¬Ê±²»ÔÙµÈ´ý1000ms
-		  if(myabs(encoder_left+encoder_right)>3000)                   //Ìõ¼þ3£¬Ð¡³µµÄÂÖÌ¥ÒòÎªÕý·´À¡´ïµ½×î´óµÄ×ªËÙ
+		  if(++count2>100)       count2=0,flag=0;                    //ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ÙµÈ´ï¿½1000ms
+		  if(myabs(encoder_left+encoder_right)>3000)                   //ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¥ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ïµ½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
 			{
 				flag=0;
-				return 1;                                                //¼ì²âµ½Ð¡³µ±»ÄÃÆð
+				return 1;                                                //ï¿½ï¿½âµ½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			}
 	 }		
 	return 0;
 }
 /**************************************************************************
 Function: Check whether the car is lowered
-Input   : The angle of balance£»Left encoder count£»Right encoder count
-Output  : 1£ºput down  0£ºNo action
-º¯Êý¹¦ÄÜ£º¼ì²âÐ¡³µÊÇ·ñ±»·ÅÏÂ
-Èë¿Ú²ÎÊý£ºÆ½ºâ½Ç¶È£»×ó±àÂëÆ÷¶ÁÊý£»ÓÒ±àÂëÆ÷¶ÁÊý
-·µ»Ø  Öµ£º1£ºÐ¡³µ·ÅÏÂ   0£ºÐ¡³µÎ´·ÅÏÂ
+Input   : The angle of balanceï¿½ï¿½Left encoder countï¿½ï¿½Right encoder count
+Output  : 1ï¿½ï¿½put down  0ï¿½ï¿½No action
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Ç·ñ±»·ï¿½ï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½Ç¶È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½1ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½   0ï¿½ï¿½Ð¡ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 int Put_Down(float Angle,int encoder_left,int encoder_right)
 { 		   
 	 static u16 flag,count;	 
-	 if(Pick_up_stop==0)                     //·ÀÖ¹Îó¼ì      
+	 if(Pick_up_stop==0)                     //ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½      
 			return 0;	                 
 	 if(flag==0)                                               
 	 {
-			if(Angle>(-10+Middle_angle)&&Angle<(10+Middle_angle)&&encoder_left==0&&encoder_right==0) //Ìõ¼þ1£¬Ð¡³µÊÇÔÚ0¶È¸½½üµÄ
+			if(Angle>(-10+Middle_angle)&&Angle<(10+Middle_angle)&&encoder_left==0&&encoder_right==0) //ï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½È¸ï¿½ï¿½ï¿½ï¿½ï¿½
 			flag=1; 
 	 } 
 	 if(flag==1)                                               
 	 {
-		  if(++count>50)                     //³¬Ê±²»ÔÙµÈ´ý 500ms
+		  if(++count>50)                     //ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ÙµÈ´ï¿½ 500ms
 		  {
 				count=0;flag=0;
 		  }
-	    if(encoder_left>3&&encoder_right>3&&encoder_left<100&&encoder_right<100) //Ìõ¼þ2£¬Ð¡³µµÄÂÖÌ¥ÔÚÎ´ÉÏµçµÄÊ±ºò±»ÈËÎª×ª¶¯  
+	    if(encoder_left>3&&encoder_right>3&&encoder_left<100&&encoder_right<100) //ï¿½ï¿½ï¿½ï¿½2ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¥ï¿½ï¿½Î´ï¿½Ïµï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Îª×ªï¿½ï¿½  
 			{ 
 				flag=0;
 				flag=0;
-				return 1;                        //¼ì²âµ½Ð¡³µ±»·ÅÏÂ 
+				return 1;                        //ï¿½ï¿½âµ½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 
 			}				                        
 	 }
 	return 0;
@@ -422,37 +425,37 @@ int Put_Down(float Angle,int encoder_left,int encoder_right)
 Function: Encoder reading is converted to speed (mm/s)
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£º±àÂëÆ÷¶ÁÊý×ª»»ÎªËÙ¶È£¨mm/s£©
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½Ù¶È£ï¿½mm/sï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 void Get_Velocity_Form_Encoder(int encoder_left,int encoder_right)
 { 	
-	float Rotation_Speed_L,Rotation_Speed_R;						//µç»ú×ªËÙ  ×ªËÙ=±àÂëÆ÷¶ÁÊý£¨5msÃ¿´Î£©*¶ÁÈ¡ÆµÂÊ/±¶ÆµÊý/¼õËÙ±È/±àÂëÆ÷¾«¶È
+	float Rotation_Speed_L,Rotation_Speed_R;						//ï¿½ï¿½ï¿½×ªï¿½ï¿½  ×ªï¿½ï¿½=ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½5msÃ¿ï¿½Î£ï¿½*ï¿½ï¿½È¡Æµï¿½ï¿½/ï¿½ï¿½Æµï¿½ï¿½/ï¿½ï¿½ï¿½Ù±ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	Rotation_Speed_L = encoder_left*Control_Frequency/EncoderMultiples/Reduction_Ratio/Encoder_precision;
-	Velocity_Left = Rotation_Speed_L*PI*Diameter_67;		//Çó³ö±àÂëÆ÷ËÙ¶È=×ªËÙ*ÖÜ³¤
+	Velocity_Left = Rotation_Speed_L*PI*Diameter_67;		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½=×ªï¿½ï¿½*ï¿½Ü³ï¿½
 	Rotation_Speed_R = encoder_right*Control_Frequency/EncoderMultiples/Reduction_Ratio/Encoder_precision;
-	Velocity_Right = Rotation_Speed_R*PI*Diameter_67;		//Çó³ö±àÂëÆ÷ËÙ¶È=×ªËÙ*ÖÜ³¤
+	Velocity_Right = Rotation_Speed_R*PI*Diameter_67;		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½=×ªï¿½ï¿½*ï¿½Ü³ï¿½
 }
 
 /**************************************************************************
 Function: Normal
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºÀ×´ïÇ°½ø±ÜÕÏÄ£Ê½
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½×´ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 void Normal(void)
 {
 	u8 j;
-		if(Mode == Normal_Mode)									  //ÆÕÍ¨µÄ¿ØÖÆÄ£Ê½¿É½øÐÐÊÖ±ú¿ØÖÆ
+		if(Mode == Normal_Mode)									  //ï¿½ï¿½Í¨ï¿½Ä¿ï¿½ï¿½ï¿½Ä£Ê½ï¿½É½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½
 	{				
 		for(j=0;j<225;j++) 	
 	 {
-		 Distance = Dataprocess[j].distance;           //Õý³£Ä£Ê½ÏÂÔÚOLEDÏÔÊ¾¾àÀë
+		 Distance = Dataprocess[j].distance;           //ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½OLEDï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
 	 }
-	 if(PS2_ON_Flag == RC_ON)		  					 //¿ªÆôÊÖ±ú¿ØÖÆÊ±£¬ÐèÏÈ°´start°´¼ü£¬È»ºóÉÏÀ­×óÒ¡¸ËÖ±µ½³öÏÖ PS2 ×ÖÑù
+	 if(PS2_ON_Flag == RC_ON)		  					 //ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½È°ï¿½startï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¡ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ PS2 ï¿½ï¿½ï¿½ï¿½
 			PS2_Control();
 	 else if(Remote_ON_Flag==RC_ON)
 		 Remote_Control();
@@ -463,48 +466,48 @@ void Normal(void)
 Function: Lidar_Avoid
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºÀ×´ïÇ°½ø±ÜÕÏÄ£Ê½
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½×´ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 void Lidar_Avoid(void)
 {
 	u8 i;
-	u8 avoid_Num=0;//ÐèÒª±ÜÕÏµÄµã
-	float Angle_Sum=0;//È·ÈÏÕÏ°­ÎïÔÚÄÄÒ»·½ÏòµÄ±äÁ¿
-	u8 too_close = 0;//ÅÐ¶ÏÕÏ°­ÎïÊÇ·ñÌ«½üµÄ±äÁ¿
+	u8 avoid_Num=0;//ï¿½ï¿½Òªï¿½ï¿½ï¿½ÏµÄµï¿½
+	float Angle_Sum=0;//È·ï¿½ï¿½ï¿½Ï°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½
+	u8 too_close = 0;//ï¿½Ð¶ï¿½ï¿½Ï°ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ì«ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½
 	if(Mode==Lidar_Avoid_Mode&&Flag_Left!=1&&Flag_Right!=1)
 	{
 		for(i=0;i<225;i++)
 		{
-			if((Dataprocess[i].angle<avoid_Angle1)||(Dataprocess[i].angle>avoid_Angle2))//Ð¡³µÇ°½ø·½Ïò100¶È·¶Î§
+			if((Dataprocess[i].angle<avoid_Angle1)||(Dataprocess[i].angle>avoid_Angle2))//Ð¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½100ï¿½È·ï¿½Î§
 			{		
-				if((Dataprocess[i].distance>0)&&(Dataprocess[i].distance<avoid_Distance))//¾àÀëÐ¡ÓÚ300mmÐèÒª±ÜÕÏ
+				if((Dataprocess[i].distance>0)&&(Dataprocess[i].distance<avoid_Distance))//ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½300mmï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½
 				{
 					Distance=Dataprocess[i].distance;
 					avoid_Num++;
 					if(Dataprocess[i].angle>310) Angle_Sum += (Dataprocess[i].angle-360);
 					else if(Dataprocess[i].angle<50) Angle_Sum+= Dataprocess[i].angle;
-					if(Dataprocess[i].distance<150)			too_close++;//¿¿µÃÌ«½ü£¬ÐèÒªºóÍË
+					if(Dataprocess[i].distance<150)			too_close++;//ï¿½ï¿½ï¿½ï¿½Ì«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½
 				}
 			}
 		}
 		if(avoid_Num<8)
 		{
-		  Move_X=avoid_speed;                                           //¸øÐ¡³µÒ»¸ö200mm/sµÄËÙ¶È£¬²»Òª´óÓÚ800
+		  Move_X=avoid_speed;                                           //ï¿½ï¿½Ð¡ï¿½ï¿½Ò»ï¿½ï¿½200mm/sï¿½ï¿½ï¿½Ù¶È£ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½800
 			Move_Z=0;
 		}
 		else if(avoid_Num>8)
 		{
 			 Move_X=0;
-	    	if(too_close>10) Move_X=-avoid_speed,Move_Z=0;      //¿¿µÄÌ«½ü£¬ºóÍËÒ»µã
+	    	if(too_close>10) Move_X=-avoid_speed,Move_Z=0;      //ï¿½ï¿½ï¿½ï¿½Ì«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
 				else
 				{
 					if(Angle_Sum>0)      
 					{
-						Move_Z=-turn_speed;//ÕÏ°­Îï¿¿ÓÒ£¬×ó×ª
+						Move_Z=-turn_speed;//ï¿½Ï°ï¿½ï¿½ï¿¿ï¿½Ò£ï¿½ï¿½ï¿½×ª
 					}
-					else   Move_Z=turn_speed; //ÕÏ°­Îï¿¿×ó£¬ÓÒ×ª
+					else   Move_Z=turn_speed; //ï¿½Ï°ï¿½ï¿½ï¿¿ï¿½ï¿½ï¿½ï¿½×ª
 				}					
 		}
  }
@@ -514,53 +517,53 @@ void Lidar_Avoid(void)
 Function: Lidar_Avoid
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºÀ×´ï¸úËæÄ£Ê½
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ä£Ê½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 void Lidar_Follow(void)
 {
 	u8 i;
-	u8 follow_num=0;                //ÅÐ¶Ï¸úËæµÄµã
-	u16 mini_distance = 65535;      //Òª¸úËæµÄ¾àÀë£¬¾ÍÊÇ×îÐ¡¾àÀëµãµÄ¾àÀë
-	static float angle =0;                 //¸úËæµãµÄ½Ç¶È
-	static float last_angle = 0;           //¸úËæµãµÄÉÏÒ»¸ö½Ç¶È
+	u8 follow_num=0;                //ï¿½Ð¶Ï¸ï¿½ï¿½ï¿½Äµï¿½
+	u16 mini_distance = 65535;      //Òªï¿½ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ë£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½
+	static float angle =0;                 //ï¿½ï¿½ï¿½ï¿½ï¿½Ä½Ç¶ï¿½
+	static float last_angle = 0;           //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ç¶ï¿½
 	u8 data_count = 0;
-	u16 Follow_distance=1500;        //¸úËæ×îÔ¶¾àÀë1500mm
+	u16 Follow_distance=1500;        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½1500mm
 	if(Mode==Lidar_Follow_Mode&&Flag_Left!=1&&Flag_Right!=1)
 	{
 		for(i=0;i<225;i++)
 		{
-			 if((0<Dataprocess[i].distance) && (Dataprocess[i].distance<Follow_distance))//ÔÚ0~1500mmÖÐÑ¡Ôñ×î½üµÄµãÀ´¸úËæ
+			 if((0<Dataprocess[i].distance) && (Dataprocess[i].distance<Follow_distance))//ï¿½ï¿½0~1500mmï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			 {
 				 follow_num++;
-				 if(Dataprocess[i].distance<mini_distance)                  //ÅÐ¶Ï³ö×îÐ¡¾àÀëµÄµã
+				 if(Dataprocess[i].distance<mini_distance)                  //ï¿½Ð¶Ï³ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Äµï¿½
 				 {
 					 mini_distance = Dataprocess[i].distance;
 					 angle = Dataprocess[i].angle;
-					 Distance = mini_distance;                                     //ÔÚoledÉÏÏÔÊ¾Òª¸úËæµãµÄ¾àÀë
+					 Distance = mini_distance;                                     //ï¿½ï¿½oledï¿½ï¿½ï¿½ï¿½Ê¾Òªï¿½ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½
 				 }
 			 }
 	  }
 	if(angle>180)
-		  angle -= 360;				//0--360¶È×ª»»³É0--180£»-180--0£¨Ë³Ê±Õë£©
-	if(angle-last_angle>13 ||angle-last_angle<-13)	//×öÒ»¶¨Ïû¶¶£¬²¨¶¯´óÓÚ10¶ÈµÄÐèÒª×öÅÐ¶Ï
+		  angle -= 360;				//0--360ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½0--180ï¿½ï¿½-180--0ï¿½ï¿½Ë³Ê±ï¿½ë£©
+	if(angle-last_angle>13 ||angle-last_angle<-13)	//ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½10ï¿½Èµï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ð¶ï¿½
 	{
-		if(++data_count == 60)		//Á¬Ðø60´Î²É¼¯µ½µÄÖµ(300msºó)ºÍÉÏ´ÎµÄ±È´óÓÚ10¶È£¬´ËÊ±²ÅÊÇÈÏÎªÊÇÓÐÐ§Öµ
+		if(++data_count == 60)		//ï¿½ï¿½ï¿½ï¿½60ï¿½Î²É¼ï¿½ï¿½ï¿½ï¿½ï¿½Öµ(300msï¿½ï¿½)ï¿½ï¿½ï¿½Ï´ÎµÄ±È´ï¿½ï¿½ï¿½10ï¿½È£ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ð§Öµ
 		{
 			data_count = 0;
 			last_angle = angle;
 		}
 	}
-	else							//²¨¶¯Ð¡ÓÚ10¶ÈµÄ¿ÉÒÔÖ±½ÓÈÏÎªÊÇÓÐÐ§Öµ
+	else							//ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½10ï¿½ÈµÄ¿ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ð§Öµ
 	{
 			data_count = 0;	
 			last_angle = angle;
 	}
 	if(follow_num>5) 	
 	{
-		Move_X=Lidar_follow_PID(mini_distance,300);//Õâ¸öµÄ¾àÀëpidÊ±Ö±½Ó×÷ÓÃÔÚËÙ¶È»·£¬ËùÒÔÒª±äÐ¡Ò»µã(MoveµÄ·¶Î§ÔÚ0~800)
-		Move_Z=Follow_Turn_PID(angle,0);//×ªÏòPIDÖ±½Ó×÷ÓÃÔÚ×ªÏò»·
+		Move_X=Lidar_follow_PID(mini_distance,300);//ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½pidÊ±Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ð¡Ò»ï¿½ï¿½(Moveï¿½Ä·ï¿½Î§ï¿½ï¿½0~800)
+		Move_Z=Follow_Turn_PID(angle,0);//×ªï¿½ï¿½PIDÖ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
 	}
 	else
 	{
@@ -574,38 +577,38 @@ void Lidar_Follow(void)
 Function: Lidar_Straight
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºÀ×´ï×ßÖ±ÏßÄ£Ê½
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½×´ï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ä£Ê½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 void Lidar_Straight(void) 
 {
 	static u16 target_distance=0;
 	u8 i;
 	u16 current_distance=target_distance;
-	static u16 Limit_distance=0;   //À×´ï×î´óµÄÌ½²â¾àÀë
+	static u16 Limit_distance=0;   //ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½
 	if(Mode==Lidar_Straight_Mode&&Flag_Left!=1&&Flag_Right!=1)
 	{
-		 Move_X=Initial_speed;//¸øÐ¡³µÒ»¸ö³õÊ¼ËÙ¶È
+		 Move_X=Initial_speed;//ï¿½ï¿½Ð¡ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½Ù¶ï¿½
 		 for(i=0;i<225;i++)
 	  {
-		  if((Dataprocess[i].angle>71)&&(Dataprocess[i].angle<74))//È¡À×´ïµÄ70µ½75¶È·¶Î§µÄµã×ö±È½Ïµã
+		  if((Dataprocess[i].angle>71)&&(Dataprocess[i].angle<74))//È¡ï¿½×´ï¿½ï¿½70ï¿½ï¿½75ï¿½È·ï¿½Î§ï¿½Äµï¿½ï¿½ï¿½ï¿½È½Ïµï¿½
 		 {
-			 if(determine<Limit_time) //ÔÚÄ£Ê½×ª»»µ½StraightÄ£Ê½3ÃëºóÈ·¶¨ÎÒÃÇÏëÒªµÄ¾àÀë
+			 if(determine<Limit_time) //ï¿½ï¿½Ä£Ê½×ªï¿½ï¿½ï¿½ï¿½StraightÄ£Ê½3ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ä¾ï¿½ï¿½ï¿½
 			 {
 				 target_distance=Dataprocess[i].distance;
-				 Limit_distance=target_distance+200;//±ÈÄ¿±ê¾àÀë´ó200mm,Ö÷Òª±ÜÃâ²ÎÕÕÎïµÄÏûÊ§µ¼ÖÂÐ¡³µ¿ìËÙ×ªÏò
+				 Limit_distance=target_distance+200;//ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½200mm,ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
 				 determine++;
 				 if(determine==(Limit_time-1)) determine=Limit_time;
 			 }
-			 if(Dataprocess[i].distance<Limit_distance)//ÏÞÖÆÒ»ÏÂÀ×´ïµÄÌ½²â¾àÀë
+			 if(Dataprocess[i].distance<Limit_distance)//ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½×´ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½
 			 {
-				 current_distance=Dataprocess[i].distance;//È·¶¨¾àÀë
+				 current_distance=Dataprocess[i].distance;//È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			   Distance=Dataprocess[i].distance;
 			 }
 		 }
 	 }
-	 Move_Z=Distance_Adjust_PID(current_distance,target_distance);//À×´ï¾àÀëpid
+	 Move_Z=Distance_Adjust_PID(current_distance,target_distance);//ï¿½×´ï¿½ï¿½ï¿½ï¿½pid
 	}
 }
 
@@ -613,27 +616,27 @@ void Lidar_Straight(void)
 Function: Select_Zhongzhi
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºÐ¡³µ»úÐµÖÐÖµµÄÑ¡Ôñ
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½Öµï¿½ï¿½Ñ¡ï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
-void Select_Zhongzhi(void)                             //»úÐµÖÐÖµÑ¡Ôñ£¬±ÜÃâ°²×°ÉÏµç´ÅÑ²Ïß¡¢CCDÑ²Ïß×°±¸Ê±Ð¡³µÍùÇ°³åµÄÏÖÏó
+void Select_Zhongzhi(void)                             //ï¿½ï¿½Ðµï¿½ï¿½ÖµÑ¡ï¿½ñ£¬±ï¿½ï¿½â°²×°ï¿½Ïµï¿½ï¿½Ñ²ï¿½ß¡ï¿½CCDÑ²ï¿½ï¿½×°ï¿½ï¿½Ê±Ð¡ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 {
 	if(Mode == ELE_Line_Patrol_Mode)
-		Middle_angle = -9 + ANGLE_ZERO_OFFSET;   //µç´ÅÑ²Ïß
+		Middle_angle = -9 + ANGLE_ZERO_OFFSET;   //ï¿½ï¿½ï¿½Ñ²ï¿½ï¿½
 	else if(Mode == CCD_Line_Patrol_Mode)
-		Middle_angle = -4 + ANGLE_ZERO_OFFSET;   //CCDÑ²Ïß
+		Middle_angle = -4 + ANGLE_ZERO_OFFSET;   //CCDÑ²ï¿½ï¿½
 	else if(Mode == Track_Line_Patrol_Mode)
-		Middle_angle = 0 + ANGLE_ZERO_OFFSET;    //ºìÍâÑ²Ïß: Ä£¿é½ÏÇá,ÖÐÖµ½Ó½ü0,¿É°´Êµ¼Ê»úÐµÇé¿öÎ¢µ÷
-	else   Middle_angle = 2 + ANGLE_ZERO_OFFSET;     //ÆÕÍ¨Ä£Ê½
+		Middle_angle = 0 + ANGLE_ZERO_OFFSET;    //ï¿½ï¿½ï¿½ï¿½Ñ²ï¿½ï¿½: Ä£ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½Öµï¿½Ó½ï¿½0,ï¿½É°ï¿½Êµï¿½Ê»ï¿½Ðµï¿½ï¿½ï¿½Î¢ï¿½ï¿½
+	else   Middle_angle = 2 + ANGLE_ZERO_OFFSET;     //ï¿½ï¿½Í¨Ä£Ê½
 }
 /**************************************************************************
 Function: Limiting function
 Input   : Value
 Output  : none
-º¯Êý¹¦ÄÜ£ºÏÞ·ùº¯Êý
-Èë¿Ú²ÎÊý£º·ùÖµ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 int target_limit_int(int insert,int low,int high)
 {
@@ -648,33 +651,33 @@ int target_limit_int(int insert,int low,int high)
 Function: The remote control command of model aircraft is processed
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£º¶Ôº½Ä£Ò£¿Ø¿ØÖÆÃüÁî½øÐÐ´¦Àí
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½Ôºï¿½Ä£Ò£ï¿½Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 void Remote_Control(void)
 {
 	  //Data within 1 second after entering the model control mode will not be processed
-	  //¶Ô½øÈëº½Ä£¿ØÖÆÄ£Ê½ºó1ÃëÄÚµÄÊý¾Ý²»´¦Àí
+	  //ï¿½Ô½ï¿½ï¿½ëº½Ä£ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½1ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½ï¿½ï¿½
     static u8 thrice=200;
     int Threshold=100;
 
-	  //limiter //ÏÞ·ù
+	  //limiter //ï¿½Þ·ï¿½
     int LX,RY; 
 //	  static float Target_LX,Target_LY,Target_RY,Target_RX;
 		Remoter_Ch1=target_limit_int(Remoter_Ch1,1000,2000);
 		Remoter_Ch2=target_limit_int(Remoter_Ch2,1000,2000);
 
 		// Front and back direction of left rocker. Control forward and backward.
-	  //×óÒ¡¸ËÇ°ºó·½Ïò¡£¿ØÖÆÇ°½øºóÍË¡£
+	  //ï¿½ï¿½Ò¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ò¡£¿ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Ë¡ï¿½
        LX=Remoter_Ch2-1500;
 	
 //		//Left joystick left and right. Control left and right movement.
-//	  //×óÒ¡¸Ë×óÓÒ·½Ïò¡£¿ØÖÆ×óÓÒÒÆ¶¯¡£¡£
+//	  //ï¿½ï¿½Ò¡ï¿½ï¿½ï¿½ï¿½ï¿½Ò·ï¿½ï¿½ò¡£¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½
 //      LY=Remoter_Ch2-1500;
 	
 		 //Right stick left and right. To control the rotation. 
-		//ÓÒÒ¡¸Ë×óÓÒ·½Ïò¡£¿ØÖÆ×Ô×ª¡£
+		//ï¿½ï¿½Ò¡ï¿½ï¿½ï¿½ï¿½ï¿½Ò·ï¿½ï¿½ò¡£¿ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
 	  RY=Remoter_Ch1-1500;		//
 	
    
@@ -688,19 +691,19 @@ void Remote_Control(void)
 //		if(RY==0) Target_RY=Target_RY/1.2f;
 		
 		
-//		//Throttle related //ÓÍÃÅÏà¹Ø
+//		//Throttle related //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //		Remote_RCvelocity=RC_Velocity+RX;
 //	  if(Remote_RCvelocity<0)Remote_RCvelocity=0;
 		
 		//The remote control command of model aircraft is processed
-		//¶Ôº½Ä£Ò£¿Ø¿ØÖÆÃüÁî½øÐÐ´¦Àí
+		//ï¿½Ôºï¿½Ä£Ò£ï¿½Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½
         Move_X= LX; 
 		Move_Z= RY; 
-        Move_X= Move_X*1.8;//*1.3ÊÇÎªÁËÀ«´óËÙ¶È
+        Move_X= Move_X*1.8;//*1.3ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
         Move_Z=Move_Z*2.3;
 			 		
 		//Data within 1 second after entering the model control mode will not be processed
-	  //¶Ô½øÈëº½Ä£¿ØÖÆÄ£Ê½ºó1ÃëÄÚµÄÊý¾Ý²»´¦Àí
+	  //ï¿½Ô½ï¿½ï¿½ëº½Ä£ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½1ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½ï¿½ï¿½
       if(thrice>0) Move_X=0,Move_Z=0,thrice--;
 
 }

@@ -44,7 +44,7 @@ extern float FineSpeed;       // 微调状态目标速度（单位mm/s）
 extern float CurveSpeed;      // 普通弯道目标速度（单位mm/s）
 extern float BigCurveSpeed;   // 大弯道目标速度（单位mm/s）
 extern float LostSpeed;       // 丢线/未定义状态安全速度（单位mm/s）
-extern float JunctionSpeed;   // 路口锁存转向时的前进速度（单位mm/s，0=原地转）
+extern float JunctionSpeed;   // 路口锁存转向时的前进速度（单位mm/s）
 extern float FinishSpeed;     // 最后一段接近终点的巡线速度（单位mm/s）
 extern float ForwardLimit;   // 前行限制(转向差速大于该值则前进速度降为0)
 extern float Track_Turn_Scale; // 转向差速(mm/s) 换算到转向环目标幅值的系数
@@ -78,5 +78,6 @@ extern u8 Track_state ;      // 最新识别的传感器状态(SensorState_t, �
 
 void TrackModule_Init(void);   // 进入巡线模式：配置PB8/PC8/PC4/PC9为输入下拉
 void TrackModule_DeInit(void); // 退出巡线模式：恢复扩展接口为PS2默认状态
+void Track_ResetLogic(void);   // 抬车/重新落地时复位路线状态，恢复普通巡线
 void IRDM_line_inspection(void);// 巡线算法：读4路传感器->计算base_speed_mm/turn_diff
 #endif

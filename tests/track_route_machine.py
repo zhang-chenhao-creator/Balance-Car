@@ -39,15 +39,15 @@ FINE_SPEED = 375.0
 CURVE_SPEED = 350.0
 BIG_CURVE_SPEED = 325.0
 LOST_SPEED = 200.0
-JUNCTION_SPEED = 0.0
+JUNCTION_SPEED = 200.0
 FINISH_SPEED = 200.0
 RISE_STEP = 5.0
 FALL_STEP = 10.0
 CENTER_CONFIRM = 3
 
 START_CENTER_CYCLES = 6
-FORK_DEBOUNCE = 1
-CROSS_DEBOUNCE = 2
+FORK_DEBOUNCE = 3
+CROSS_DEBOUNCE = 3
 TURN_MIN_CYCLES = 30
 TURN_CENTER_CYCLES = 3
 TURN_TIMEOUT_CYCLES = 240
@@ -79,7 +79,7 @@ def is_confirmed_left_fork(sensor):
 
 
 def is_left_fork(sensor):
-    return sensor in (STATE_RIGHT_90_A, STATE_RIGHT_90_B, STATE_RIGHT_BIG)
+    return sensor in (STATE_RIGHT_90_A, STATE_RIGHT_90_B)
 
 
 def is_confirmed_right_fork(sensor):
@@ -103,7 +103,7 @@ def is_confirmed_fork(sensor, trig):
         return is_confirmed_left_fork(sensor)
     if trig == TRIG_RIGHT_FORK:
         return is_confirmed_right_fork(sensor)
-    return sensor == STATE_CROSS
+    return False
 
 
 def needed_debounce(trig):
@@ -237,7 +237,7 @@ class RouteMachine:
             return
         trig = ROUTE[self.index][0]
         if matches_trig(sensor, trig):
-            if trig == TRIG_CROSS or self.armed or is_confirmed_fork(sensor, trig):
+            if self.armed or is_confirmed_fork(sensor, trig):
                 self.junction_count = min(self.junction_count + 1, 255)
             elif self.junction_count > 0:
                 self.junction_count -= 1
@@ -267,7 +267,6 @@ class RouteMachine:
         self.turn_saw_gap = 0
         self.turn_center_count = 0
         self.turn_diff = locked_turn(self.locked_act)
-        self.base_speed = JUNCTION_SPEED
 
     def _enter_search(self):
         self.run = RUN_SEARCH

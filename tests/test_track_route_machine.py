@@ -7,6 +7,7 @@ from track_route_machine import (
     ACT_RIGHT,
     ACT_STOP,
     FINISH_SPEED,
+    FORK_DEBOUNCE,
     JUNCTION_SPEED,
     LOST_DEBOUNCE,
     RECOVER_CYCLES,
@@ -85,22 +86,20 @@ class FirmwareContractTests(unittest.TestCase):
             r"\{\s*TRIG_CROSS,\s*ACT_STOP\s*\}",
         )
 
-    def test_junction_speed_is_zero_for_in_place_turn(self):
+    def test_junction_speed_keeps_moving(self):
         text = SOURCE.read_text(encoding="utf-8")
-        self.assertRegex(text, r"float\s+JunctionSpeed\s*=\s*0")
+        self.assertRegex(text, r"float\s+JunctionSpeed\s*=\s*200")
         self.assertRegex(text, r"float\s+LostSpeed\s*=\s*200")
-        self.assertRegex(text, r"float\s+FinishSpeed\s*=\s*200")
+        self.assertIn("Track_ResetLogic", text)
 
-    def test_left_fork_includes_1100_and_1110(self):
+    def test_left_fork_does_not_treat_1110_as_junction(self):
         text = SOURCE.read_text(encoding="utf-8")
-        self.assertIn("STATE_RIGHT_90_A", text)
-        self.assertIn("STATE_RIGHT_90_B", text)
-        self.assertIn("STATE_RIGHT_BIG", text)
         match = re.search(
-            r"Track_IsLeftFork[\s\S]*?STATE_RIGHT_BIG",
+            r"static int Track_IsLeftFork[\s\S]*?return Track_IsConfirmedLeftFork\(sensor_state\) \|\|\s*\(sensor_state == STATE_RIGHT_90_B\);",
             text,
         )
         self.assertIsNotNone(match)
+        self.assertNotIn("STATE_RIGHT_BIG);", text.split("Track_IsLeftFork")[1].split("Track_IsConfirmedRightFork")[0])
 
 
 class RouteMachineTests(unittest.TestCase):
@@ -126,35 +125,33 @@ class RouteMachineTests(unittest.TestCase):
 
     def test_clean_left_fork_locks_left_once(self):
         machine = leave_start()
-        machine.feed(STATE_RIGHT_90_A, 1)
+        machine.feed(STATE_RIGHT_90_A, FORK_DEBOUNCE)
         self.assertEqual(machine.run, RUN_TURN)
         self.assertEqual(machine.index, 1)
         self.assertEqual(machine.locked_act, ACT_LEFT)
         self.assertEqual(machine.turn_diff, -TURN90)
-        self.assertEqual(machine.base_speed, 0.0)
         machine.feed(STATE_RIGHT_90_A, 10)
         self.assertEqual(machine.index, 1)
 
     def test_sloppy_1100_also_locks_left(self):
         machine = leave_start()
-        machine.feed(STATE_RIGHT_90_B, 1)
+        machine.feed(STATE_RIGHT_90_B, FORK_DEBOUNCE)
         self.assertEqual(machine.run, RUN_TURN)
         self.assertEqual(machine.locked_act, ACT_LEFT)
         self.assertEqual(machine.turn_diff, -TURN90)
 
-    def test_early_1110_locks_left_when_armed(self):
+    def test_outer_only_1110_stays_normal_correction(self):
         machine = leave_start()
-        machine.feed(STATE_RIGHT_BIG, 1)
-        self.assertEqual(machine.run, RUN_TURN)
-        self.assertEqual(machine.locked_act, ACT_LEFT)
+        machine.feed(STATE_RIGHT_BIG, 8)
+        self.assertEqual(machine.run, RUN_PATROL)
+        self.assertEqual(machine.index, 0)
+        self.assertEqual(machine.turn_diff, -TURN_MAX)
 
-    def test_lock_snaps_off_cruise_speed(self):
+    def test_lift_all_black_does_not_consume_cross(self):
         machine = leave_start()
-        machine.feed(STATE_STRAIGHT, 40)
-        self.assertGreater(machine.base_speed, 100.0)
-        machine.feed(STATE_RIGHT_90_A, 1)
-        self.assertEqual(machine.run, RUN_TURN)
-        self.assertEqual(machine.base_speed, 0.0)
+        machine.feed(STATE_CROSS, 8)
+        self.assertEqual(machine.run, RUN_PATROL)
+        self.assertEqual(machine.index, 0)
 
     def test_unarmed_1100_does_not_lock_left(self):
         machine = RouteMachine()
@@ -170,9 +167,9 @@ class RouteMachineTests(unittest.TestCase):
 
     def test_curve_0011_is_not_a_right_fork(self):
         machine = leave_start()
-        machine.feed(STATE_RIGHT_90_A, 1)
+        machine.feed(STATE_RIGHT_90_A, FORK_DEBOUNCE)
         finish_turn(machine)
-        machine.feed(STATE_CROSS, 2)
+        machine.feed(STATE_CROSS, FORK_DEBOUNCE)
         finish_turn(machine, gap=STATE_LEFT_SMALL)
         machine.feed(STATE_LEFT_90_B, 8)
         self.assertEqual(machine.run, RUN_PATROL)
@@ -180,7 +177,7 @@ class RouteMachineTests(unittest.TestCase):
 
     def test_turn_ignores_lost_and_does_not_enter_search(self):
         machine = leave_start()
-        machine.feed(STATE_RIGHT_90_A, 1)
+        machine.feed(STATE_RIGHT_90_A, FORK_DEBOUNCE)
         machine.feed(STATE_LOST, 10)
         self.assertEqual(machine.run, RUN_TURN)
         self.assertEqual(machine.turn_diff, -TURN90)
@@ -233,22 +230,22 @@ class RouteMachineTests(unittest.TestCase):
         machine = leave_start()
         actions = []
 
-        machine.feed(STATE_RIGHT_90_A, 1)
+        machine.feed(STATE_RIGHT_90_A, FORK_DEBOUNCE)
         actions.append(machine.locked_act)
         self.assertEqual(machine.turn_diff, -TURN90)
         finish_turn(machine)
 
-        machine.feed(STATE_CROSS, 2)
+        machine.feed(STATE_CROSS, FORK_DEBOUNCE)
         actions.append(machine.locked_act)
         self.assertEqual(machine.turn_diff, TURN90)
         finish_turn(machine, gap=STATE_LEFT_SMALL)
 
-        machine.feed(STATE_LEFT_90_A, 1)
+        machine.feed(STATE_LEFT_90_A, FORK_DEBOUNCE)
         actions.append(machine.locked_act)
         self.assertEqual(machine.turn_diff, TURN90)
         finish_turn(machine, gap=STATE_LEFT_SMALL)
 
-        machine.feed(STATE_CROSS, 2)
+        machine.feed(STATE_CROSS, FORK_DEBOUNCE)
         actions.append(machine.locked_act)
         self.assertEqual(machine.turn_diff, -TURN90)
         finish_turn(machine)
@@ -258,7 +255,7 @@ class RouteMachineTests(unittest.TestCase):
         machine.feed(STATE_STRAIGHT, 4)
         self.assertLessEqual(machine.base_speed, FINISH_SPEED + 1e-6)
 
-        machine.feed(STATE_CROSS, 2)
+        machine.feed(STATE_CROSS, FORK_DEBOUNCE)
         actions.append(machine.locked_act)
         self.assertEqual(actions, [ACT_LEFT, ACT_RIGHT, ACT_RIGHT, ACT_LEFT, ACT_STOP])
         self.assertEqual(machine.run, RUN_FINISH)
@@ -269,7 +266,7 @@ class RouteMachineTests(unittest.TestCase):
 
     def test_same_cross_does_not_increment_twice(self):
         machine = leave_start()
-        machine.feed(STATE_RIGHT_90_A, 1)
+        machine.feed(STATE_RIGHT_90_A, FORK_DEBOUNCE)
         finish_turn(machine)
         machine.feed(STATE_CROSS, 20)
         self.assertEqual(machine.index, 2)
@@ -277,7 +274,7 @@ class RouteMachineTests(unittest.TestCase):
 
     def test_turn_timeout_keeps_searching_left_instead_of_freezing(self):
         machine = leave_start()
-        machine.feed(STATE_RIGHT_90_A, 1)
+        machine.feed(STATE_RIGHT_90_A, FORK_DEBOUNCE)
         machine.feed(STATE_LOST, TURN_TIMEOUT_CYCLES)
         self.assertEqual(machine.run, RUN_SEARCH)
         self.assertEqual(machine.last_side, SIDE_LEFT)

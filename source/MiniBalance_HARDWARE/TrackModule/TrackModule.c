@@ -27,7 +27,7 @@ float FineSpeed = 375;     // 微调状态目标速度（mm/s）
 float CurveSpeed = 350;    // 普通弯道目标速度（mm/s）
 float BigCurveSpeed = 325; // 大弯道目标速度（mm/s）
 float LostSpeed = 200;     // 丢线或未定义状态的安全速度（mm/s）
-float JunctionSpeed = 0;   // 锁存转向时前进为0，原地转，避免冲过路口
+float JunctionSpeed = 200; // 路口转向用现有最慢档，日常巡线不被锁成0
 float FinishSpeed = 200;   // 最后一段接近终点：用现有最慢档
 float ForwardLimit = 50;   // 前行限制(转向差速大于该值时前进速度降为0)（椭圆例程为80）
 float Track_Turn_Scale = 0.7f; // turn_diff(mm/s) → 转向环目标幅值 的换算系数
@@ -37,8 +37,8 @@ float Track_Speed_FallStep = 10; // 每个5ms周期允许的减速步长（mm/s�
 u8 Track_CenterConfirmCycles = 3; // 恢复直行前需要连续确认的周期数
 
 #define TRACK_START_CENTER_CYCLES    6   /* 30ms */
-#define TRACK_FORK_DEBOUNCE          1   /* 5ms，左边一出现支路立刻锁存 */
-#define TRACK_CROSS_DEBOUNCE         2   /* 10ms */
+#define TRACK_FORK_DEBOUNCE          3   /* 15ms，避免直道偏线误当路口 */
+#define TRACK_CROSS_DEBOUNCE         3   /* 15ms */
 #define TRACK_TURN_MIN_CYCLES       30   /* 150ms */
 #define TRACK_TURN_CENTER_CYCLES     3   /* 15ms */
 #define TRACK_TURN_WIDE_CYCLES      80   /* 400ms，宽胶带时允许不出现中间全白 */
@@ -189,10 +189,10 @@ static int Track_IsConfirmedLeftFork(int sensor_state)
 
 static int Track_IsLeftFork(int sensor_state)
 {
-    /* 1000 明确左岔；1100/1110 是巡线不准或已经开始压到支路 */
+    /* 只认左三路压线(1000)和左两路压线(1100)。
+     * 只有左外(1110)是普通大偏差，必须继续当巡线纠偏，不能锁成路口。 */
     return Track_IsConfirmedLeftFork(sensor_state) ||
-           (sensor_state == STATE_RIGHT_90_B) ||
-           (sensor_state == STATE_RIGHT_BIG);
+           (sensor_state == STATE_RIGHT_90_B);
 }
 
 static int Track_IsConfirmedRightFork(int sensor_state)
@@ -210,7 +210,8 @@ static int Track_IsConfirmedFork(int sensor_state, TrackTrig_t trig)
 {
     if (trig == TRIG_LEFT_FORK) return Track_IsConfirmedLeftFork(sensor_state);
     if (trig == TRIG_RIGHT_FORK) return Track_IsConfirmedRightFork(sensor_state);
-    return sensor_state == STATE_CROSS;
+    /* 全黑(抬车四路灯全亮)必须先居中过，不能直接当路口/终点 */
+    return 0;
 }
 
 static u8 Track_NeededDebounce(TrackTrig_t trig)
@@ -344,7 +345,6 @@ static void Track_LockRouteAction(void)
     Track_Run = RUN_TURN;
     Track_ResetTurnFlags();
     Track_ApplyLockedTurn(Track_LockedAct);
-    base_speed_mm = JunctionSpeed; /* 立刻刹住前进，不把 400mm/s 带进路口 */
 }
 
 static void Track_UpdateArming(int sensor_state)
@@ -368,8 +368,8 @@ static void Track_UpdateArming(int sensor_state)
     trig = Track_Route[Track_RouteIndex].trig;
     if (Track_MatchesTrig(sensor_state, trig))
     {
-        /* 明确岔口(中间两路仍在主线)立刻认；1100/1110 仍要先居中，避免直道偏线误触发。 */
-        if ((trig == TRIG_CROSS) || Track_Armed || Track_IsConfirmedFork(sensor_state, trig))
+        /* 明确左/右岔口(中间主线还在)可直接认；全黑口和 1100 必须先居中。 */
+        if (Track_Armed || Track_IsConfirmedFork(sensor_state, trig))
         {
             if (Track_JunctionCount < 255) Track_JunctionCount++;
         }
@@ -561,9 +561,41 @@ static void Track_RouteStep(int sensor_state)
  * 巡线功能函数（计算 base_speed_mm / turn_diff 两个输出量）					   *
  * 在5ms中断中调用															   *
  *=============================================================================*/
+void Track_ResetLogic(void)
+{
+    base_speed_mm = 0;
+    turn_diff = 0;
+    Track_state = 0;
+    Track_SpeedState = STATE_STRAIGHT;
+    Track_CenterStableCount = 0;
+    Track_Run = RUN_WAIT_START;
+    Track_RouteIndex = 0;
+    Track_LockedAct = ACT_LEFT;
+    Track_LastSide = SIDE_CENTER;
+    Track_Armed = 0;
+    Track_CenterHold = 0;
+    Track_JunctionCount = 0;
+    Track_LostCount = 0;
+    Track_RecoverCount = 0;
+    Track_TurnCycles = 0;
+    Track_TurnSawGap = 0;
+    Track_TurnCenterCount = 0;
+    Track_SearchCycles = 0;
+}
+
 void IRDM_line_inspection(void)
 {
-    int sensor_state = (DH1 << 3) | (DH2 << 2) | (DH3 << 1) | DH4;
+    int sensor_state;
+
+    /* 抬车时四路红外都看不到白底，会变成全黑(0000)。
+     * 不能当路口/终点，复位后落地再从普通巡线开始。 */
+    if (Pick_up_stop)
+    {
+        Track_ResetLogic();
+        return;
+    }
+
+    sensor_state = (DH1 << 3) | (DH2 << 2) | (DH3 << 1) | DH4;
     Track_state = sensor_state;
     Track_RouteStep(sensor_state);
 }
@@ -580,24 +612,7 @@ Output  : none
 void TrackModule_Init(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure = {0};
-	base_speed_mm = 0;
-	turn_diff = 0;
-	Track_state = 0;
-	Track_SpeedState = STATE_STRAIGHT;
-	Track_CenterStableCount = 0;
-	Track_Run = RUN_WAIT_START;
-	Track_RouteIndex = 0;
-	Track_LockedAct = ACT_LEFT;
-	Track_LastSide = SIDE_CENTER;
-	Track_Armed = 0;
-	Track_CenterHold = 0;
-	Track_JunctionCount = 0;
-	Track_LostCount = 0;
-	Track_RecoverCount = 0;
-	Track_TurnCycles = 0;
-	Track_TurnSawGap = 0;
-	Track_TurnCenterCount = 0;
-	Track_SearchCycles = 0;
+	Track_ResetLogic();
 
 	__HAL_RCC_GPIOC_CLK_ENABLE();      // 使能 GPIOC 时钟
 	__HAL_RCC_GPIOB_CLK_ENABLE();      // 使能 GPIOB 时钟
