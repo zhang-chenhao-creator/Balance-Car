@@ -27,8 +27,8 @@ float FineSpeed = 375;     // 微调状态目标速度（mm/s）
 float CurveSpeed = 350;    // 普通弯道目标速度（mm/s）
 float BigCurveSpeed = 325; // 大弯道目标速度（mm/s）
 float LostSpeed = 200;     // 丢线或未定义状态的安全速度（mm/s）
-float JunctionSpeed = 200; // 路口锁存转向：沿用现有最慢档 LostSpeed
-float FinishSpeed = 200;   // 最后一段接近终点：同样用最慢档
+float JunctionSpeed = 0;   // 锁存转向时前进为0，原地转，避免冲过路口
+float FinishSpeed = 200;   // 最后一段接近终点：用现有最慢档
 float ForwardLimit = 50;   // 前行限制(转向差速大于该值时前进速度降为0)（椭圆例程为80）
 float Track_Turn_Scale = 0.7f; // turn_diff(mm/s) → 转向环目标幅值 的换算系数
                               // 参考:遥控全速转向时 Turn_Target≈54(即turn_diff≈77时)
@@ -37,7 +37,8 @@ float Track_Speed_FallStep = 10; // 每个5ms周期允许的减速步长（mm/s�
 u8 Track_CenterConfirmCycles = 3; // 恢复直行前需要连续确认的周期数
 
 #define TRACK_START_CENTER_CYCLES    6   /* 30ms */
-#define TRACK_JUNCTION_DEBOUNCE      3   /* 15ms */
+#define TRACK_FORK_DEBOUNCE          1   /* 5ms，左边一出现支路立刻锁存 */
+#define TRACK_CROSS_DEBOUNCE         2   /* 10ms */
 #define TRACK_TURN_MIN_CYCLES       30   /* 150ms */
 #define TRACK_TURN_CENTER_CYCLES     3   /* 15ms */
 #define TRACK_TURN_WIDE_CYCLES      80   /* 400ms，宽胶带时允许不出现中间全白 */
@@ -180,16 +181,42 @@ static float Track_TargetSpeedForState(int sensor_state)
     }
 }
 
+static int Track_IsConfirmedLeftFork(int sensor_state)
+{
+    /* 主线还在中间、左外新出现黑线：真正的左岔口 */
+    return sensor_state == STATE_RIGHT_90_A;
+}
+
 static int Track_IsLeftFork(int sensor_state)
 {
-    /* 黑黑黑白(1000) 或巡线不准时的 黑黑白白(1100) */
-    return (sensor_state == STATE_RIGHT_90_A) || (sensor_state == STATE_RIGHT_90_B);
+    /* 1000 明确左岔；1100/1110 是巡线不准或已经开始压到支路 */
+    return Track_IsConfirmedLeftFork(sensor_state) ||
+           (sensor_state == STATE_RIGHT_90_B) ||
+           (sensor_state == STATE_RIGHT_BIG);
+}
+
+static int Track_IsConfirmedRightFork(int sensor_state)
+{
+    return sensor_state == STATE_LEFT_90_A;
 }
 
 static int Track_IsRightFork(int sensor_state)
 {
     /* 只认白黑黑黑(0001)。白白黑黑(0011)仍当右偏，避免椭圆弯被当成右岔口。 */
-    return sensor_state == STATE_LEFT_90_A;
+    return Track_IsConfirmedRightFork(sensor_state);
+}
+
+static int Track_IsConfirmedFork(int sensor_state, TrackTrig_t trig)
+{
+    if (trig == TRIG_LEFT_FORK) return Track_IsConfirmedLeftFork(sensor_state);
+    if (trig == TRIG_RIGHT_FORK) return Track_IsConfirmedRightFork(sensor_state);
+    return sensor_state == STATE_CROSS;
+}
+
+static u8 Track_NeededDebounce(TrackTrig_t trig)
+{
+    if (trig == TRIG_CROSS) return TRACK_CROSS_DEBOUNCE;
+    return TRACK_FORK_DEBOUNCE;
 }
 
 static int Track_MatchesTrig(int sensor_state, TrackTrig_t trig)
@@ -221,6 +248,26 @@ static int Track_BothMidsOnLine(int sensor_state)
 {
     /* DH2=bit2、DH3=bit1，黑线为0：两中都压线时这两位都是0 */
     return (sensor_state & 0x06) == 0;
+}
+
+static int Track_CaughtNewLine(int sensor_state, TrackAct_t act)
+{
+    if (sensor_state == STATE_STRAIGHT) return 1;
+    if (act == ACT_LEFT)
+    {
+        return (sensor_state == STATE_RIGHT_SMALL) ||
+               (sensor_state == STATE_RIGHT_90_A) ||
+               (sensor_state == STATE_RIGHT_90_B) ||
+               (sensor_state == STATE_RIGHT_BIG);
+    }
+    if (act == ACT_RIGHT)
+    {
+        return (sensor_state == STATE_LEFT_SMALL) ||
+               (sensor_state == STATE_LEFT_90_A) ||
+               (sensor_state == STATE_LEFT_90_B) ||
+               (sensor_state == STATE_LEFT_BIG);
+    }
+    return 0;
 }
 
 static void Track_FollowPatrol(int sensor_state)
@@ -297,6 +344,7 @@ static void Track_LockRouteAction(void)
     Track_Run = RUN_TURN;
     Track_ResetTurnFlags();
     Track_ApplyLockedTurn(Track_LockedAct);
+    base_speed_mm = JunctionSpeed; /* 立刻刹住前进，不把 400mm/s 带进路口 */
 }
 
 static void Track_UpdateArming(int sensor_state)
@@ -320,10 +368,14 @@ static void Track_UpdateArming(int sensor_state)
     trig = Track_Route[Track_RouteIndex].trig;
     if (Track_MatchesTrig(sensor_state, trig))
     {
-        /* 全黑口不要求先居中：偏着进入丁字口仍要认。岔口要求先居中，避免弯道误触发。 */
-        if ((trig == TRIG_CROSS) || Track_Armed)
+        /* 明确岔口(中间两路仍在主线)立刻认；1100/1110 仍要先居中，避免直道偏线误触发。 */
+        if ((trig == TRIG_CROSS) || Track_Armed || Track_IsConfirmedFork(sensor_state, trig))
         {
             if (Track_JunctionCount < 255) Track_JunctionCount++;
+        }
+        else if (Track_JunctionCount > 0)
+        {
+            Track_JunctionCount--;
         }
         else
         {
@@ -332,7 +384,11 @@ static void Track_UpdateArming(int sensor_state)
         return;
     }
 
-    Track_JunctionCount = 0;
+    if (Track_JunctionCount > 0)
+    {
+        Track_JunctionCount--;
+        return;
+    }
     if (!Track_IsLeftFork(sensor_state) && !Track_IsRightFork(sensor_state))
     {
         Track_Armed = 0;
@@ -413,7 +469,7 @@ static void Track_RouteStep(int sensor_state)
             Track_FollowPatrol(sensor_state);
             Track_UpdateArming(sensor_state);
             if ((Track_RouteIndex < TRACK_ROUTE_LEN) &&
-                (Track_JunctionCount >= TRACK_JUNCTION_DEBOUNCE))
+                (Track_JunctionCount >= Track_NeededDebounce(Track_Route[Track_RouteIndex].trig)))
             {
                 Track_LockRouteAction();
                 if (Track_Run == RUN_FINISH) target_speed = 0;
@@ -432,13 +488,15 @@ static void Track_RouteStep(int sensor_state)
             }
             if (Track_TurnCycles >= TRACK_TURN_TIMEOUT_CYCLES)
             {
-                Track_EnterFault();
-                target_speed = 0;
+                if (Track_LockedAct == ACT_LEFT) Track_LastSide = SIDE_LEFT;
+                else if (Track_LockedAct == ACT_RIGHT) Track_LastSide = SIDE_RIGHT;
+                Track_EnterSearch();
+                target_speed = JunctionSpeed;
                 break;
             }
             if ((Track_TurnCycles >= TRACK_TURN_MIN_CYCLES) &&
                 (Track_TurnSawGap || (Track_TurnCycles >= TRACK_TURN_WIDE_CYCLES)) &&
-                (sensor_state == STATE_STRAIGHT))
+                Track_CaughtNewLine(sensor_state, Track_LockedAct))
             {
                 if (Track_TurnCenterCount < 255) Track_TurnCenterCount++;
             }
@@ -483,7 +541,9 @@ static void Track_RouteStep(int sensor_state)
                 target_speed = 0;
                 break;
             }
-            target_speed = LostSpeed;
+            /* 偏左/偏右丢线原地转着找，居中缺口才低速直行跨越 */
+            if (Track_LastSide == SIDE_CENTER) target_speed = LostSpeed;
+            else target_speed = JunctionSpeed;
             break;
 
         case RUN_FINISH:

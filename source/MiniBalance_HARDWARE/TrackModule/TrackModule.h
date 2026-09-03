@@ -44,7 +44,7 @@ extern float FineSpeed;       // 微调状态目标速度（单位mm/s）
 extern float CurveSpeed;      // 普通弯道目标速度（单位mm/s）
 extern float BigCurveSpeed;   // 大弯道目标速度（单位mm/s）
 extern float LostSpeed;       // 丢线/未定义状态安全速度（单位mm/s）
-extern float JunctionSpeed;   // 路口锁存转向时的前进速度（单位mm/s）
+extern float JunctionSpeed;   // 路口锁存转向时的前进速度（单位mm/s，0=原地转）
 extern float FinishSpeed;     // 最后一段接近终点的巡线速度（单位mm/s）
 extern float ForwardLimit;   // 前行限制(转向差速大于该值则前进速度降为0)
 extern float Track_Turn_Scale; // 转向差速(mm/s) 换算到转向环目标幅值的系数

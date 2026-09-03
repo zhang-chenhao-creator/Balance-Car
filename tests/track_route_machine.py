@@ -39,14 +39,15 @@ FINE_SPEED = 375.0
 CURVE_SPEED = 350.0
 BIG_CURVE_SPEED = 325.0
 LOST_SPEED = 200.0
-JUNCTION_SPEED = 200.0
+JUNCTION_SPEED = 0.0
 FINISH_SPEED = 200.0
 RISE_STEP = 5.0
 FALL_STEP = 10.0
 CENTER_CONFIRM = 3
 
 START_CENTER_CYCLES = 6
-JUNCTION_DEBOUNCE = 3
+FORK_DEBOUNCE = 1
+CROSS_DEBOUNCE = 2
 TURN_MIN_CYCLES = 30
 TURN_CENTER_CYCLES = 3
 TURN_TIMEOUT_CYCLES = 240
@@ -73,12 +74,20 @@ def ramp_step(current, target, rise_step=RISE_STEP, fall_step=FALL_STEP):
     return target
 
 
+def is_confirmed_left_fork(sensor):
+    return sensor == STATE_RIGHT_90_A
+
+
 def is_left_fork(sensor):
-    return sensor in (STATE_RIGHT_90_A, STATE_RIGHT_90_B)
+    return sensor in (STATE_RIGHT_90_A, STATE_RIGHT_90_B, STATE_RIGHT_BIG)
+
+
+def is_confirmed_right_fork(sensor):
+    return sensor == STATE_LEFT_90_A
 
 
 def is_right_fork(sensor):
-    return sensor == STATE_LEFT_90_A
+    return is_confirmed_right_fork(sensor)
 
 
 def matches_trig(sensor, trig):
@@ -87,6 +96,40 @@ def matches_trig(sensor, trig):
     if trig == TRIG_RIGHT_FORK:
         return is_right_fork(sensor)
     return sensor == STATE_CROSS
+
+
+def is_confirmed_fork(sensor, trig):
+    if trig == TRIG_LEFT_FORK:
+        return is_confirmed_left_fork(sensor)
+    if trig == TRIG_RIGHT_FORK:
+        return is_confirmed_right_fork(sensor)
+    return sensor == STATE_CROSS
+
+
+def needed_debounce(trig):
+    if trig == TRIG_CROSS:
+        return CROSS_DEBOUNCE
+    return FORK_DEBOUNCE
+
+
+def caught_new_line(sensor, act):
+    if sensor == STATE_STRAIGHT:
+        return True
+    if act == ACT_LEFT:
+        return sensor in (
+            STATE_RIGHT_SMALL,
+            STATE_RIGHT_90_A,
+            STATE_RIGHT_90_B,
+            STATE_RIGHT_BIG,
+        )
+    if act == ACT_RIGHT:
+        return sensor in (
+            STATE_LEFT_SMALL,
+            STATE_LEFT_90_A,
+            STATE_LEFT_90_B,
+            STATE_LEFT_BIG,
+        )
+    return False
 
 
 def side_from_sensor(sensor):
@@ -194,12 +237,16 @@ class RouteMachine:
             return
         trig = ROUTE[self.index][0]
         if matches_trig(sensor, trig):
-            if trig == TRIG_CROSS or self.armed:
+            if trig == TRIG_CROSS or self.armed or is_confirmed_fork(sensor, trig):
                 self.junction_count = min(self.junction_count + 1, 255)
+            elif self.junction_count > 0:
+                self.junction_count -= 1
             else:
                 self.junction_count = 0
             return
-        self.junction_count = 0
+        if self.junction_count > 0:
+            self.junction_count -= 1
+            return
         if not is_left_fork(sensor) and not is_right_fork(sensor):
             self.armed = 0
             self.center_hold = 0
@@ -220,6 +267,7 @@ class RouteMachine:
         self.turn_saw_gap = 0
         self.turn_center_count = 0
         self.turn_diff = locked_turn(self.locked_act)
+        self.base_speed = JUNCTION_SPEED
 
     def _enter_search(self):
         self.run = RUN_SEARCH
@@ -260,7 +308,9 @@ class RouteMachine:
             else:
                 self.turn_diff = follow_turn(sensor)
                 self._update_arming(sensor)
-                if self.index < len(ROUTE) and self.junction_count >= JUNCTION_DEBOUNCE:
+                if self.index < len(ROUTE) and self.junction_count >= needed_debounce(
+                    ROUTE[self.index][0]
+                ):
                     self._lock()
                     target = 0.0 if self.run == RUN_FINISH else JUNCTION_SPEED
                 else:
@@ -271,14 +321,17 @@ class RouteMachine:
             if (not both_mids_on_line(sensor)) or sensor == STATE_LOST:
                 self.turn_saw_gap = 1
             if self.turn_cycles >= TURN_TIMEOUT_CYCLES:
-                self.run = RUN_FAULT
-                self.turn_diff = 0.0
-                target = 0.0
+                if self.locked_act == ACT_LEFT:
+                    self.last_side = SIDE_LEFT
+                elif self.locked_act == ACT_RIGHT:
+                    self.last_side = SIDE_RIGHT
+                self._enter_search()
+                target = JUNCTION_SPEED
             else:
                 if (
                     self.turn_cycles >= TURN_MIN_CYCLES
                     and (self.turn_saw_gap or self.turn_cycles >= TURN_WIDE_TAPE_CYCLES)
-                    and sensor == STATE_STRAIGHT
+                    and caught_new_line(sensor, self.locked_act)
                 ):
                     self.turn_center_count = min(self.turn_center_count + 1, 255)
                 else:
@@ -310,7 +363,7 @@ class RouteMachine:
                 self.turn_diff = 0.0
                 target = 0.0
             else:
-                target = LOST_SPEED
+                target = LOST_SPEED if self.last_side == SIDE_CENTER else JUNCTION_SPEED
         else:
             self.turn_diff = 0.0
             target = 0.0
