@@ -7,9 +7,9 @@
 版本：V1.0
 修改时间：2022-09-05
 
-说明：移植自 STM32F103RCT6_通用巡线例程_C10B / 椭圆巡线例程_C10B
-  算法与参考例程一致（仅去掉了"赋值给两个电机目标速度"的语句，因为平衡
-  小车的速度环/转向环独立，见 control.c 的 Velocity()/Turn()）
+说明：移植自 STM32F103RCT6_通用巡线例程_C10B / 椭圆巡线例程_C10B。
+  日常巡线仍输出 base_speed_mm / turn_diff 给平衡车速度环和转向环。
+  本文件增加固定路线状态机和按最后位置回搜的丢线恢复。
 All rights reserved
 ***********************************************/
 #include "TrackModule.h"
@@ -27,6 +27,8 @@ float FineSpeed = 375;     // 微调状态目标速度（mm/s）
 float CurveSpeed = 350;    // 普通弯道目标速度（mm/s）
 float BigCurveSpeed = 325; // 大弯道目标速度（mm/s）
 float LostSpeed = 200;     // 丢线或未定义状态的安全速度（mm/s）
+float JunctionSpeed = 200; // 路口锁存转向：沿用现有最慢档 LostSpeed
+float FinishSpeed = 200;   // 最后一段接近终点：同样用最慢档
 float ForwardLimit = 50;   // 前行限制(转向差速大于该值时前进速度降为0)（椭圆例程为80）
 float Track_Turn_Scale = 0.7f; // turn_diff(mm/s) → 转向环目标幅值 的换算系数
                               // 参考:遥控全速转向时 Turn_Target≈54(即turn_diff≈77时)
@@ -34,7 +36,58 @@ float Track_Speed_RiseStep = 5;  // 每个5ms周期允许的加速步长（mm/s�
 float Track_Speed_FallStep = 10; // 每个5ms周期允许的减速步长（mm/s）
 u8 Track_CenterConfirmCycles = 3; // 恢复直行前需要连续确认的周期数
 
-/* 传感器状态定义见 TrackModule.h 中的 SensorState_t */
+#define TRACK_START_CENTER_CYCLES    6   /* 30ms */
+#define TRACK_JUNCTION_DEBOUNCE      3   /* 15ms */
+#define TRACK_TURN_MIN_CYCLES       30   /* 150ms */
+#define TRACK_TURN_CENTER_CYCLES     3   /* 15ms */
+#define TRACK_TURN_WIDE_CYCLES      80   /* 400ms，宽胶带时允许不出现中间全白 */
+#define TRACK_TURN_TIMEOUT_CYCLES  240   /* 1.2s */
+#define TRACK_LOST_DEBOUNCE          3   /* 15ms */
+#define TRACK_RECOVER_CYCLES         3   /* 15ms */
+#define TRACK_SEARCH_TIMEOUT_CYCLES 240  /* 1.2s */
+
+#define TRACK_ROUTE_LEN 5
+
+typedef enum {
+    RUN_WAIT_START = 0,
+    RUN_PATROL,
+    RUN_TURN,
+    RUN_SEARCH,
+    RUN_FINISH,
+    RUN_FAULT
+} TrackRun_t;
+
+typedef enum {
+    ACT_LEFT = 0,
+    ACT_RIGHT,
+    ACT_STOP
+} TrackAct_t;
+
+typedef enum {
+    TRIG_LEFT_FORK = 0,
+    TRIG_RIGHT_FORK,
+    TRIG_CROSS
+} TrackTrig_t;
+
+typedef enum {
+    SIDE_CENTER = 0,
+    SIDE_LEFT,
+    SIDE_RIGHT
+} TrackSide_t;
+
+typedef struct {
+    TrackTrig_t trig;
+    TrackAct_t act;
+} TrackRouteItem_t;
+
+/* 固定赛道：左岔口左转、全黑口右转、右岔口右转、全黑口左转、全黑口停车 */
+static const TrackRouteItem_t Track_Route[TRACK_ROUTE_LEN] = {
+    { TRIG_LEFT_FORK,  ACT_LEFT },
+    { TRIG_CROSS,      ACT_RIGHT },
+    { TRIG_RIGHT_FORK, ACT_RIGHT },
+    { TRIG_CROSS,      ACT_LEFT },
+    { TRIG_CROSS,      ACT_STOP }
+};
 
 float base_speed_mm = 0;// 基础速度（mm/s）
 float turn_diff = 0;    // 转向差速
@@ -42,6 +95,20 @@ u8 Track_state = 0;     // 最新识别的传感器状态(供OLED显示)
 
 static int Track_SpeedState = STATE_STRAIGHT;
 static u8 Track_CenterStableCount = 0;
+
+static TrackRun_t Track_Run = RUN_WAIT_START;
+static u8 Track_RouteIndex = 0;
+static TrackAct_t Track_LockedAct = ACT_LEFT;
+static TrackSide_t Track_LastSide = SIDE_CENTER;
+static u8 Track_Armed = 0;
+static u8 Track_CenterHold = 0;
+static u8 Track_JunctionCount = 0;
+static u8 Track_LostCount = 0;
+static u8 Track_RecoverCount = 0;
+static u16 Track_TurnCycles = 0;
+static u8 Track_TurnSawGap = 0;
+static u8 Track_TurnCenterCount = 0;
+static u16 Track_SearchCycles = 0;
 
 /*=============================================================================*
  * 速度目标与实际下发值之间的斜坡限制                                     *
@@ -113,71 +180,332 @@ static float Track_TargetSpeedForState(int sensor_state)
     }
 }
 
+static int Track_IsLeftFork(int sensor_state)
+{
+    /* 黑黑黑白(1000) 或巡线不准时的 黑黑白白(1100) */
+    return (sensor_state == STATE_RIGHT_90_A) || (sensor_state == STATE_RIGHT_90_B);
+}
+
+static int Track_IsRightFork(int sensor_state)
+{
+    /* 只认白黑黑黑(0001)。白白黑黑(0011)仍当右偏，避免椭圆弯被当成右岔口。 */
+    return sensor_state == STATE_LEFT_90_A;
+}
+
+static int Track_MatchesTrig(int sensor_state, TrackTrig_t trig)
+{
+    if (trig == TRIG_LEFT_FORK) return Track_IsLeftFork(sensor_state);
+    if (trig == TRIG_RIGHT_FORK) return Track_IsRightFork(sensor_state);
+    return sensor_state == STATE_CROSS;
+}
+
+static TrackSide_t Track_SideFromSensor(int sensor_state)
+{
+    if (Track_IsLeftFork(sensor_state) ||
+        (sensor_state == STATE_RIGHT_BIG) ||
+        (sensor_state == STATE_RIGHT_SMALL))
+    {
+        return SIDE_LEFT;
+    }
+    if (Track_IsRightFork(sensor_state) ||
+        (sensor_state == STATE_LEFT_90_B) ||
+        (sensor_state == STATE_LEFT_BIG) ||
+        (sensor_state == STATE_LEFT_SMALL))
+    {
+        return SIDE_RIGHT;
+    }
+    return SIDE_CENTER;
+}
+
+static int Track_BothMidsOnLine(int sensor_state)
+{
+    /* DH2=bit2、DH3=bit1，黑线为0：两中都压线时这两位都是0 */
+    return (sensor_state & 0x06) == 0;
+}
+
+static void Track_FollowPatrol(int sensor_state)
+{
+    switch (sensor_state)
+    {
+        case STATE_CROSS:
+            turn_diff = 0;
+            break;
+        case STATE_LEFT_90_A:
+        case STATE_LEFT_90_B:
+            turn_diff = Turn90Angle; /* 物理右转 */
+            break;
+        case STATE_RIGHT_90_A:
+        case STATE_RIGHT_90_B:
+            turn_diff = -Turn90Angle; /* 物理左转 */
+            break;
+        case STATE_LEFT_BIG:
+            turn_diff = TurnMaxAngle;
+            break;
+        case STATE_RIGHT_BIG:
+            turn_diff = -TurnMaxAngle;
+            break;
+        case STATE_LEFT_SMALL:
+            turn_diff = TurnMinAngle;
+            break;
+        case STATE_RIGHT_SMALL:
+            turn_diff = -TurnMinAngle;
+            break;
+        case STATE_STRAIGHT:
+            turn_diff = 0;
+            break;
+        default:
+            turn_diff = 0;
+            break;
+    }
+}
+
+static void Track_ApplyLockedTurn(TrackAct_t act)
+{
+    if (act == ACT_LEFT) turn_diff = -Turn90Angle;
+    else if (act == ACT_RIGHT) turn_diff = Turn90Angle;
+    else turn_diff = 0;
+}
+
+static void Track_ApplySearchTurn(void)
+{
+    if (Track_LastSide == SIDE_LEFT) turn_diff = -TurnMaxAngle;
+    else if (Track_LastSide == SIDE_RIGHT) turn_diff = TurnMaxAngle;
+    else turn_diff = 0;
+}
+
+static void Track_ResetTurnFlags(void)
+{
+    Track_TurnCycles = 0;
+    Track_TurnSawGap = 0;
+    Track_TurnCenterCount = 0;
+}
+
+static void Track_LockRouteAction(void)
+{
+    Track_LockedAct = Track_Route[Track_RouteIndex].act;
+    Track_RouteIndex++;
+    Track_JunctionCount = 0;
+    Track_Armed = 0;
+    Track_CenterHold = 0;
+    Track_LostCount = 0;
+    if (Track_LockedAct == ACT_STOP)
+    {
+        Track_Run = RUN_FINISH;
+        turn_diff = 0;
+        return;
+    }
+    Track_Run = RUN_TURN;
+    Track_ResetTurnFlags();
+    Track_ApplyLockedTurn(Track_LockedAct);
+}
+
+static void Track_UpdateArming(int sensor_state)
+{
+    TrackTrig_t trig;
+
+    if (sensor_state == STATE_STRAIGHT)
+    {
+        if (Track_CenterHold < 255) Track_CenterHold++;
+        if (Track_CenterHold >= TRACK_START_CENTER_CYCLES) Track_Armed = 1;
+        Track_JunctionCount = 0;
+        return;
+    }
+
+    if (Track_RouteIndex >= TRACK_ROUTE_LEN)
+    {
+        Track_JunctionCount = 0;
+        return;
+    }
+
+    trig = Track_Route[Track_RouteIndex].trig;
+    if (Track_MatchesTrig(sensor_state, trig))
+    {
+        /* 全黑口不要求先居中：偏着进入丁字口仍要认。岔口要求先居中，避免弯道误触发。 */
+        if ((trig == TRIG_CROSS) || Track_Armed)
+        {
+            if (Track_JunctionCount < 255) Track_JunctionCount++;
+        }
+        else
+        {
+            Track_JunctionCount = 0;
+        }
+        return;
+    }
+
+    Track_JunctionCount = 0;
+    if (!Track_IsLeftFork(sensor_state) && !Track_IsRightFork(sensor_state))
+    {
+        Track_Armed = 0;
+        Track_CenterHold = 0;
+    }
+}
+
+static void Track_EnterSearch(void)
+{
+    Track_Run = RUN_SEARCH;
+    Track_SearchCycles = 0;
+    Track_RecoverCount = 0;
+    Track_LostCount = 0;
+    Track_JunctionCount = 0;
+    Track_ApplySearchTurn();
+}
+
+static void Track_EnterFault(void)
+{
+    Track_Run = RUN_FAULT;
+    turn_diff = 0;
+}
+
+static float Track_PatrolTargetSpeed(int sensor_state)
+{
+    if (Track_RouteIndex >= (TRACK_ROUTE_LEN - 1)) return FinishSpeed;
+    return Track_TargetSpeedForState(Track_GetSpeedState(sensor_state));
+}
+
+static void Track_RouteStep(int sensor_state)
+{
+    float target_speed;
+
+    if (sensor_state != STATE_LOST)
+    {
+        Track_LastSide = Track_SideFromSensor(sensor_state);
+        Track_LostCount = 0;
+    }
+    else if (Track_LostCount < 255)
+    {
+        Track_LostCount++;
+    }
+
+    switch (Track_Run)
+    {
+        case RUN_WAIT_START:
+            if (sensor_state == STATE_LOST)
+            {
+                if (Track_LostCount >= TRACK_LOST_DEBOUNCE) Track_EnterSearch();
+                target_speed = LostSpeed;
+                break;
+            }
+            Track_FollowPatrol(sensor_state);
+            if (sensor_state == STATE_STRAIGHT)
+            {
+                if (Track_CenterHold < 255) Track_CenterHold++;
+            }
+            else
+            {
+                Track_CenterHold = 0;
+            }
+            if ((sensor_state != STATE_CROSS) &&
+                (Track_CenterHold >= TRACK_START_CENTER_CYCLES))
+            {
+                Track_Run = RUN_PATROL;
+                Track_Armed = 1;
+            }
+            target_speed = Track_TargetSpeedForState(Track_GetSpeedState(sensor_state));
+            break;
+
+        case RUN_PATROL:
+            if (sensor_state == STATE_LOST)
+            {
+                if (Track_LostCount >= TRACK_LOST_DEBOUNCE) Track_EnterSearch();
+                target_speed = LostSpeed;
+                break;
+            }
+            Track_FollowPatrol(sensor_state);
+            Track_UpdateArming(sensor_state);
+            if ((Track_RouteIndex < TRACK_ROUTE_LEN) &&
+                (Track_JunctionCount >= TRACK_JUNCTION_DEBOUNCE))
+            {
+                Track_LockRouteAction();
+                if (Track_Run == RUN_FINISH) target_speed = 0;
+                else target_speed = JunctionSpeed;
+                break;
+            }
+            target_speed = Track_PatrolTargetSpeed(sensor_state);
+            break;
+
+        case RUN_TURN:
+            Track_ApplyLockedTurn(Track_LockedAct);
+            if (Track_TurnCycles < 65535) Track_TurnCycles++;
+            if (!Track_BothMidsOnLine(sensor_state) || (sensor_state == STATE_LOST))
+            {
+                Track_TurnSawGap = 1;
+            }
+            if (Track_TurnCycles >= TRACK_TURN_TIMEOUT_CYCLES)
+            {
+                Track_EnterFault();
+                target_speed = 0;
+                break;
+            }
+            if ((Track_TurnCycles >= TRACK_TURN_MIN_CYCLES) &&
+                (Track_TurnSawGap || (Track_TurnCycles >= TRACK_TURN_WIDE_CYCLES)) &&
+                (sensor_state == STATE_STRAIGHT))
+            {
+                if (Track_TurnCenterCount < 255) Track_TurnCenterCount++;
+            }
+            else
+            {
+                Track_TurnCenterCount = 0;
+            }
+            if (Track_TurnCenterCount >= TRACK_TURN_CENTER_CYCLES)
+            {
+                Track_Run = RUN_PATROL;
+                Track_ResetTurnFlags();
+                Track_Armed = 0;
+                Track_CenterHold = 0;
+                Track_FollowPatrol(sensor_state);
+            }
+            target_speed = JunctionSpeed;
+            break;
+
+        case RUN_SEARCH:
+            Track_ApplySearchTurn();
+            if (Track_SearchCycles < 65535) Track_SearchCycles++;
+            if (sensor_state != STATE_LOST)
+            {
+                if (Track_RecoverCount < 255) Track_RecoverCount++;
+            }
+            else
+            {
+                Track_RecoverCount = 0;
+            }
+            if (Track_RecoverCount >= TRACK_RECOVER_CYCLES)
+            {
+                Track_Run = RUN_PATROL;
+                Track_SearchCycles = 0;
+                Track_RecoverCount = 0;
+                Track_FollowPatrol(sensor_state);
+                target_speed = Track_PatrolTargetSpeed(sensor_state);
+                break;
+            }
+            if (Track_SearchCycles >= TRACK_SEARCH_TIMEOUT_CYCLES)
+            {
+                Track_EnterFault();
+                target_speed = 0;
+                break;
+            }
+            target_speed = LostSpeed;
+            break;
+
+        case RUN_FINISH:
+        case RUN_FAULT:
+        default:
+            turn_diff = 0;
+            target_speed = 0;
+            break;
+    }
+
+    base_speed_mm = Track_Speed_Ramp(base_speed_mm, target_speed);
+}
+
 /*=============================================================================*
  * 巡线功能函数（计算 base_speed_mm / turn_diff 两个输出量）					   *
  * 在5ms中断中调用															   *
  *=============================================================================*/
 void IRDM_line_inspection(void)
 {
-    static int last_state = 0;// 记录上一次的状态
-
-    // 读取传感器状态：4个传感器组合值
     int sensor_state = (DH1 << 3) | (DH2 << 2) | (DH3 << 1) | DH4;
-    Track_state = sensor_state;   // 供OLED显示当前识别状态
-    /*=========================================================================*
-     * 状态判断：设置转向差速												   *
-     *=========================================================================*/
-    switch (sensor_state)
-    {
-       case STATE_CROSS:// 交叉路口处理
-			turn_diff = 0;
-            break;
-        case STATE_LEFT_90_A: // 左直角弯
-		case STATE_LEFT_90_B: // 左直角弯
-            turn_diff = Turn90Angle;
-            break;
-        case STATE_RIGHT_90_A: // 右直角弯
-		case STATE_RIGHT_90_B: // 右直角弯
-            turn_diff = -Turn90Angle;
-            break;
-        case STATE_LEFT_BIG://左大弯
-            turn_diff = TurnMaxAngle;
-            break;
-        case STATE_RIGHT_BIG://右大弯
-            turn_diff = -TurnMaxAngle;
-            break;
-        case STATE_LEFT_SMALL://左微调
-            turn_diff = TurnMinAngle;
-            break;
-        case STATE_RIGHT_SMALL://右微调
-            turn_diff = -TurnMinAngle;
-            break;
-        case STATE_STRAIGHT://直行
-            turn_diff = 0;
-            break;
-        case STATE_LOST://丢线处理
-            if (last_state == STATE_LEFT_SMALL) turn_diff = TurnMidAngle;//继续左转
-			else if (last_state == STATE_RIGHT_SMALL) turn_diff = -TurnMidAngle;//继续右转
-			else if(last_state == STATE_LEFT_BIG ) turn_diff = TurnMaxAngle;//继续左转
-			else if(last_state == STATE_RIGHT_BIG ) turn_diff = -TurnMaxAngle;//继续右转
-			//其余情况维持上一次的转向(与参考例程一致)
-            break;
-        default: // 未定义状态，直行
-            turn_diff = 0;
-            break;
-    }
-	//保存传感器状态
-	if(sensor_state!=STATE_LOST)
-	{
-		last_state=sensor_state;
-	}
-    /*
-     * 速度不再随状态直接跳变：先得到离散目标，再通过斜坡限制实际速度。
-     * 1001 恢复到直道时需要连续确认，进入弯道或异常状态则立即降目标。
-     */
-    base_speed_mm = Track_Speed_Ramp(
-        base_speed_mm,
-        Track_TargetSpeedForState(Track_GetSpeedState(sensor_state)));
+    Track_state = sensor_state;
+    Track_RouteStep(sensor_state);
 }
 
 /**************************************************************************
@@ -197,6 +525,19 @@ void TrackModule_Init(void)
 	Track_state = 0;
 	Track_SpeedState = STATE_STRAIGHT;
 	Track_CenterStableCount = 0;
+	Track_Run = RUN_WAIT_START;
+	Track_RouteIndex = 0;
+	Track_LockedAct = ACT_LEFT;
+	Track_LastSide = SIDE_CENTER;
+	Track_Armed = 0;
+	Track_CenterHold = 0;
+	Track_JunctionCount = 0;
+	Track_LostCount = 0;
+	Track_RecoverCount = 0;
+	Track_TurnCycles = 0;
+	Track_TurnSawGap = 0;
+	Track_TurnCenterCount = 0;
+	Track_SearchCycles = 0;
 
 	__HAL_RCC_GPIOC_CLK_ENABLE();      // 使能 GPIOC 时钟
 	__HAL_RCC_GPIOB_CLK_ENABLE();      // 使能 GPIOB 时钟
