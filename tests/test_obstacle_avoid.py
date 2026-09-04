@@ -321,7 +321,7 @@ class AvoidRoutineBehaviorTests(unittest.TestCase):
         """
         self._compile_route_harness(harness)
 
-    def test_second_obstacle_and_turn_timeout_enter_safe_hold(self):
+    def test_second_obstacle_timeout_and_cumulative_search_limit_enter_safe_hold(self):
         harness = r"""
             #include <assert.h>
             #include "avoid_routine.h"
@@ -375,6 +375,46 @@ class AvoidRoutineBehaviorTests(unittest.TestCase):
                 assert(Avoid_State == AVOID_ARC_RIGHT);
                 Gyro_Turn = 0;
                 for (i = 0; i < 1001 && Avoid_State == AVOID_ARC_RIGHT; ++i) tick();
+                assert(Avoid_State == AVOID_ABORT_HOLD);
+
+                /* SEARCH_LINE and REENTER_LINE share one cumulative distance
+                   limit, so intermittent line hits cannot reset the 800 mm cap. */
+                Lidar_Detect = 0; tick();
+                assert(Avoid_State == AVOID_IDLE);
+                Lidar_Detect = 1; tick();
+                Encoder_Left = 0; Encoder_Right = 0;
+                sample(250); sample(250); sample(250);
+                for (i = 0; i < 220 && Avoid_State == AVOID_BRAKE; ++i) tick();
+                assert(Avoid_State == AVOID_STOP_SETTLE);
+                for (i = 0; i < 80; ++i) tick();
+                assert(Avoid_State == AVOID_ARC_RIGHT);
+
+                snapshot.sample_id++; snapshot.distance_mm = 1000;
+                Gyro_Turn = 1476.0f;
+                for (i = 0; i < 120 && Avoid_State == AVOID_ARC_RIGHT; ++i) tick();
+                assert(Avoid_State == AVOID_DIAGONAL);
+                Gyro_Turn = 0;
+                Encoder_Left = 171; Encoder_Right = 171;
+                for (i = 0; i < 700 && Avoid_State == AVOID_DIAGONAL; ++i) tick();
+                assert(Avoid_State == AVOID_ARC_LEFT);
+                Encoder_Left = 0; Encoder_Right = 0;
+                Gyro_Turn = 1476.0f;
+                for (i = 0; i < 220 && Avoid_State == AVOID_ARC_LEFT; ++i) tick();
+                assert(Avoid_State == AVOID_SEARCH_LINE);
+
+                Gyro_Turn = 0;
+                Encoder_Left = 30000; Encoder_Right = 30000;
+                Track_state = STATE_LEFT_SMALL;
+                tick(); tick(); tick();
+                assert(Avoid_State == AVOID_REENTER_LINE);
+                Track_state = STATE_LOST;
+                tick();
+                assert(Avoid_State == AVOID_SEARCH_LINE);
+                Track_state = STATE_LEFT_SMALL;
+                tick(); tick(); tick();
+                assert(Avoid_State == AVOID_REENTER_LINE);
+                Track_state = STATE_LOST;
+                tick();
                 assert(Avoid_State == AVOID_ABORT_HOLD);
                 return 0;
             }

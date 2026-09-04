@@ -51,6 +51,7 @@ static u8    s_stop_confirm;
 static u16   s_state_ticks;
 static u16   s_cooldown;
 static float s_odom_mm;
+static float s_search_total_mm;
 static float s_turn_deg;
 static float s_avoid_speed;
 static float s_resume_speed;
@@ -89,8 +90,12 @@ static float Avoid_MeasuredSpeed(void)
 
 static void Avoid_AccumulateMotion(void)
 {
-    s_odom_mm += (Avoid_Abs((float)Encoder_Left) +
-                  Avoid_Abs((float)Encoder_Right)) * 0.5f * ENCODER_TO_MM;
+    float step_mm = (Avoid_Abs((float)Encoder_Left) +
+                     Avoid_Abs((float)Encoder_Right)) * 0.5f * ENCODER_TO_MM;
+
+    s_odom_mm += step_mm;
+    if (Avoid_State == AVOID_SEARCH_LINE || Avoid_State == AVOID_REENTER_LINE)
+        s_search_total_mm += step_mm;
     s_turn_deg += Avoid_Abs(Gyro_Turn) * GYRO_Z_TO_DPS * CONTROL_PERIOD_S;
 }
 
@@ -153,6 +158,7 @@ static void AvoidRoutine_Update5ms(u8 obstacle_entered)
         {
             Avoid_Active = 1;
             s_route_guard_armed = 0;
+            s_search_total_mm = 0;
             s_avoid_speed = Patrol_Speed_Cmd;
             Avoid_EnterState(AVOID_BRAKE);
         }
@@ -217,7 +223,10 @@ static void AvoidRoutine_Update5ms(u8 obstacle_entered)
         }
         done = Avoid_AngleDone(Avoid_LeftAngleDeg);
         if (done == 1U)
+        {
+            s_search_total_mm = 0;
             Avoid_EnterState(AVOID_SEARCH_LINE);
+        }
         else if (done == 2U)
             Avoid_Abort();
         break;
@@ -242,12 +251,17 @@ static void AvoidRoutine_Update5ms(u8 obstacle_entered)
         {
             s_line_confirm = 0;
         }
-        if (s_odom_mm >= Avoid_SearchMaxMm)
+        if (s_search_total_mm >= Avoid_SearchMaxMm)
             Avoid_Abort();
         break;
 
     case AVOID_REENTER_LINE:
         if (s_route_guard_armed && obstacle_entered)
+        {
+            Avoid_Abort();
+            break;
+        }
+        if (s_search_total_mm >= Avoid_SearchMaxMm)
         {
             Avoid_Abort();
             break;
@@ -414,6 +428,7 @@ void TrackAvoid_Init(void)
     s_guard_enabled_prev = enabled;
     s_route_guard_armed = 0;
     s_cooldown = 0;
+    s_search_total_mm = 0;
     s_avoid_speed = 0;
     s_resume_speed = 0;
     Avoid_Active = 0;
