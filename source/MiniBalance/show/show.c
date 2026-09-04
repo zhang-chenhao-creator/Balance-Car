@@ -1,39 +1,40 @@
 /***********************************************
-¹«Ë¾£ºÂÖÈ¤¿Æ¼¼(¶«Ý¸)ÓÐÏÞ¹«Ë¾
-Æ·ÅÆ£ºWHEELTEC
-¹ÙÍø£ºwheeltec.net
-ÌÔ±¦µêÆÌ£ºshop114407458.taobao.com 
-ËÙÂôÍ¨: https://minibalance.aliexpress.com/store/4455017
-°æ±¾£ºV1.0
-ÐÞ¸ÄÊ±¼ä£º2022-09-05
+ï¿½ï¿½Ë¾ï¿½ï¿½ï¿½ï¿½È¤ï¿½Æ¼ï¿½(ï¿½ï¿½Ý¸)ï¿½ï¿½ï¿½Þ¹ï¿½Ë¾
+Æ·ï¿½Æ£ï¿½WHEELTEC
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½wheeltec.net
+ï¿½Ô±ï¿½ï¿½ï¿½ï¿½Ì£ï¿½shop114407458.taobao.com 
+ï¿½ï¿½ï¿½ï¿½Í¨: https://minibalance.aliexpress.com/store/4455017
+ï¿½æ±¾ï¿½ï¿½V1.0
+ï¿½Þ¸ï¿½Ê±ï¿½ä£º2022-09-05
 
 Brand: WHEELTEC
 Website: wheeltec.net
 Taobao shop: shop114407458.taobao.com 
 Aliexpress: https://minibalance.aliexpress.com/store/4455017
 Version: V1.0
-Update£º2022-09-05
+Updateï¿½ï¿½2022-09-05
 
 All rights reserved
 ***********************************************/
 #include "show.h"
-#include "TrackModule.h"	//ºìÍâÑ²Ïß(4Â·Ñ°¼£)ÏÔÊ¾
-float Velocity_Left,Velocity_Right;	//³µÂÖËÙ¶È(mm/s)
+#include "TrackModule.h"	//ï¿½ï¿½ï¿½ï¿½Ñ²ï¿½ï¿½(4Â·Ñ°ï¿½ï¿½)ï¿½ï¿½Ê¾
+#include "avoid_routine.h"
+float Velocity_Left,Velocity_Right;	//ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½(mm/s)
 /**************************************************************************
 Function: OLED display
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºOLEDÏÔÊ¾
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½OLEDï¿½ï¿½Ê¾
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 /**************************************************************************
 Function: Track_OLED_Show_State
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºÏÔÊ¾ºìÍâÑ²Ïßµ±Ç°Ê¶±ðµ½µÄ×´Ì¬(µÚ0ÐÐ×ó²à,8×Ö·û¶¨¿í,×Ô¶¯Çå¾É×Ö)
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ñ²ï¿½ßµï¿½Ç°Ê¶ï¿½ðµ½µï¿½×´Ì¬(ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½,8ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 static void Track_OLED_Show_State(void)
 {
@@ -55,8 +56,8 @@ static void Track_OLED_Show_State(void)
 }
 void oled_show(void)
 {
-	 memset(OLED_GRAM,0, 128*8*sizeof(u8));	//GRAMÇåÁãµ«²»Á¢¼´Ë¢ÐÂ£¬·ÀÖ¹»¨ÆÁ
-		//=============µÚÒ»ÐÐÏÔÊ¾Ð¡³µÄ£Ê½=======================//	
+	 memset(OLED_GRAM,0, 128*8*sizeof(u8));	//GRAMï¿½ï¿½ï¿½ãµ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¢ï¿½Â£ï¿½ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½
+		//=============ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ê¾Ð¡ï¿½ï¿½Ä£Ê½=======================//	
 		if((Mode!=CCD_Line_Patrol_Mode)&&(Mode!=Track_Line_Patrol_Mode))
 		{			
 			if(Way_Angle==1)	OLED_ShowString(0,0,"DMP");
@@ -76,31 +77,37 @@ void oled_show(void)
 			OLED_ShowNumber(90,0,Sensor,4,12);		
 		}
 		else if(Mode ==CCD_Line_Patrol_Mode)  OLED_Show_CCD();
-		else if(Mode == Track_Line_Patrol_Mode)	//ºìÍâÑ²Ïß: Ê¶±ð×´Ì¬+IRDM+DH1~DH4
+		else if(Mode == Track_Line_Patrol_Mode)	//ï¿½ï¿½ï¿½ï¿½Ñ²ï¿½ï¿½: Ê¶ï¿½ï¿½×´Ì¬+IRDM+DH1~DH4
 		{
-			Track_OLED_Show_State();			//µÚ0ÐÐ×ó²à: µ±Ç°Ê¶±ð×´Ì¬(8×Ö·û¶¨¿í)
+			Track_OLED_Show_State();			//ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½Ç°Ê¶ï¿½ï¿½×´Ì¬(8ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½)
 			OLED_ShowString(66,0,"IRDM");
 			OLED_ShowNumber(98,0,DH1?1:0,1,12);
 			OLED_ShowNumber(105,0,DH2?1:0,1,12);
 			OLED_ShowNumber(112,0,DH3?1:0,1,12);
 			OLED_ShowNumber(119,0,DH4?1:0,1,12);
+			if(Guard_State==OBSTACLE_GUARD_DISABLED)     OLED_ShowString(82,10,"O");
+			else if(Guard_State==OBSTACLE_GUARD_CLEAR)   OLED_ShowString(82,10,"C");
+			else if(Guard_State==OBSTACLE_GUARD_SLOW)    OLED_ShowString(82,10,"S");
+			else if(Guard_State==OBSTACLE_GUARD_BLOCKED) OLED_ShowString(82,10,"B");
+			else                                         OLED_ShowString(82,10,"D");
+			OLED_ShowNumber(90,10,Avoid_State,2,12);
 		}
 		else if(Mode == Ultrasonic_Avoid_Mode) OLED_ShowString(60,0,"U_Avoid");
 		else if(Mode == Ultrasonic_Follow_Mode) OLED_ShowString(60,0,"U_Follow");
 		else               OLED_ShowString(60,0,"Normal  ");
-		//=============µÚ¶þÐÐÏÔÊ¾½Ç¶È=======================//	
+		//=============ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½Ç¶ï¿½=======================//	
 		                      OLED_ShowString(00,10,"Angle");
-		if(PS2_ON_Flag==RC_ON)	OLED_ShowString(82,10,"PS2 ");	//PS2ÊÖ±ú
+		if(PS2_ON_Flag==RC_ON)	OLED_ShowString(82,10,"PS2 ");	//PS2ï¿½Ö±ï¿½
 		else if(Remote_ON_Flag==RC_ON) OLED_ShowString(82,10,"R-C");
 		if((((Mode==ELE_Line_Patrol_Mode)||(Mode==CCD_Line_Patrol_Mode))&&(Lidar_Detect==1))||(((Mode==Lidar_Avoid_Mode)||(Mode==Lidar_Follow_Mode)||(Mode==Lidar_Straight_Mode))&&Lidar_flag==1)) 
-			                    OLED_ShowString(82,10,"Lidar");//ELE\CCDÑ²ÏßÄ£Ê½ÏÂ½ÓÈëÀ×´ïµÄÏÔÊ¾
+			                    OLED_ShowString(82,10,"Lidar");//ELE\CCDÑ²ï¿½ï¿½Ä£Ê½ï¿½Â½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ê¾
 		if( Angle_Balance<0)	OLED_ShowString(48,10,"-");
 		if(Angle_Balance>=0)	OLED_ShowString(48,10,"+");
 		                      OLED_ShowNumber(56,10, myabs((int)Angle_Balance),3,12);
-	  //=============µÚÈýÐÐÏÔÊ¾½ÇËÙ¶ÈÓë¾àÀë===============//
+	  //=============ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½===============//
     if(Mode==CCD_Line_Patrol_Mode)
     {
-				//=============µÚÈýÐÐÏÔÊ¾±àÂëÆ÷1=======================//	
+				//=============ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1=======================//	
 														OLED_ShowString(00,20,"Z");
 			if( CCD_Zhongzhi<0)		OLED_ShowString(10,20,"-"),
 														OLED_ShowNumber(25,20,-CCD_Zhongzhi,3,12);
@@ -123,7 +130,7 @@ void oled_show(void)
 														OLED_ShowString(114,20,"mm");
 		}
 
-		//=============µÚËÄÐÐÏÔÊ¾×ó±àÂëÆ÷PWMÓë¶ÁÊý=======================//	
+		//=============ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PWMï¿½ï¿½ï¿½ï¿½ï¿½=======================//	
 		                      OLED_ShowString(00,30,"L");
 		if(Motor_Left<0)		  OLED_ShowString(16,30,"-"),
 													OLED_ShowNumber(26,30,myabs((int)Motor_Left),4,12);
@@ -135,7 +142,7 @@ void oled_show(void)
 		                      OLED_ShowNumber(68,30,myabs((int)Velocity_Left),4,12);
 													OLED_ShowString(96,30,"mm/s");
 	
-		//=============µÚÎåÐÐÏÔÊ¾ÓÒ±àÂëÆ÷PWMÓë¶ÁÊý=======================//		
+		//=============ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½Ò±ï¿½ï¿½ï¿½ï¿½ï¿½PWMï¿½ï¿½ï¿½ï¿½ï¿½=======================//		
 		                      OLED_ShowString(00,40,"R");
 		if(Motor_Right<0)		  OLED_ShowString(16,40,"-"),
 													OLED_ShowNumber(26,40,myabs((int)Motor_Right),4,12);
@@ -147,7 +154,7 @@ void oled_show(void)
 		                      OLED_ShowNumber(68,40,myabs((int)Velocity_Right),4,12);
 													OLED_ShowString(96,40,"mm/s");
 
-		//=============µÚÁùÐÐÏÔÊ¾µçÑ¹Óëµç»ú¿ª¹Ø=======================//
+		//=============ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½=======================//
 		                      OLED_ShowString(0,50,"V");
 													OLED_ShowString(30,50,".");
 													OLED_ShowString(64,50,"V");
@@ -157,59 +164,59 @@ void oled_show(void)
 		if(Flag_Stop)         OLED_ShowString(95,50,"OFF");
 		if(!Flag_Stop)        OLED_ShowString(95,50,"ON ");
 											
-		//=============Ë¢ÐÂ=======================//
+		//=============Ë¢ï¿½ï¿½=======================//
 		OLED_Refresh_Gram();	
 }
 /**************************************************************************
 Function: Send data to APP
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºÏòAPP·¢ËÍÊý¾Ý
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½APPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 void APP_Show(void)
 {    
   static u8 flag;
 	int Encoder_Left_Show,Encoder_Right_Show,Voltage_Show;
-	Voltage_Show=(Voltage-1110)*2/3;		if(Voltage_Show<0)Voltage_Show=0;if(Voltage_Show>100) Voltage_Show=100;   //¶ÔµçÑ¹Êý¾Ý½øÐÐ´¦Àí
-	Encoder_Right_Show=Velocity_Right*1.1; if(Encoder_Right_Show<0) Encoder_Right_Show=-Encoder_Right_Show;			  //¶Ô±àÂëÆ÷Êý¾Ý¾ÍÐÐÊý¾Ý´¦Àí±ãÓÚÍ¼ÐÎ»¯
+	Voltage_Show=(Voltage-1110)*2/3;		if(Voltage_Show<0)Voltage_Show=0;if(Voltage_Show>100) Voltage_Show=100;   //ï¿½Ôµï¿½Ñ¹ï¿½ï¿½ï¿½Ý½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½
+	Encoder_Right_Show=Velocity_Right*1.1; if(Encoder_Right_Show<0) Encoder_Right_Show=-Encoder_Right_Show;			  //ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½Î»ï¿½
 	Encoder_Left_Show=Velocity_Left*1.1;  if(Encoder_Left_Show<0) Encoder_Left_Show=-Encoder_Left_Show;
 	flag=!flag;
-	if(PID_Send==1)			//·¢ËÍPID²ÎÊý,ÔÚAPPµ÷²Î½çÃæÏÔÊ¾
+	if(PID_Send==1)			//ï¿½ï¿½ï¿½ï¿½PIDï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½APPï¿½ï¿½ï¿½Î½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾
 	{
-		printf("{C%d:%d:%d:%d:%d:%d:%d:%d:%d}$",(int)Target_Velocity,(int)Balance_Kp,(int)Balance_Kd,(int)Velocity_Kp,(int)Velocity_Ki,(int)Turn_Kp,(int)Turn_Kd,(int)Distance_KP,(int)Distance_KD);//´òÓ¡µ½APPÉÏÃæ	
+		printf("{C%d:%d:%d:%d:%d:%d:%d:%d:%d}$",(int)Target_Velocity,(int)Balance_Kp,(int)Balance_Kd,(int)Velocity_Kp,(int)Velocity_Ki,(int)Turn_Kp,(int)Turn_Kd,(int)Distance_KP,(int)Distance_KD);//ï¿½ï¿½Ó¡ï¿½ï¿½APPï¿½ï¿½ï¿½ï¿½	
 		PID_Send=0;	
 	}	
-   else	if(flag==0)		// ·¢ËÍµç³ØµçÑ¹£¬ËÙ¶È£¬½Ç¶ÈµÈ²ÎÊý£¬ÔÚAPPÊ×Ò³ÏÔÊ¾
+   else	if(flag==0)		// ï¿½ï¿½ï¿½Íµï¿½Øµï¿½Ñ¹ï¿½ï¿½ï¿½Ù¶È£ï¿½ï¿½Ç¶ÈµÈ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½APPï¿½ï¿½Ò³ï¿½ï¿½Ê¾
 	 {
-		 printf("{A%d:%d:%d:%d}$",(int)Encoder_Left_Show,(int)Encoder_Right_Show,(int)Voltage_Show,(int)Angle_Balance); //´òÓ¡µ½APPÉÏÃæ
+		 printf("{A%d:%d:%d:%d}$",(int)Encoder_Left_Show,(int)Encoder_Right_Show,(int)Voltage_Show,(int)Angle_Balance); //ï¿½ï¿½Ó¡ï¿½ï¿½APPï¿½ï¿½ï¿½ï¿½
 	 }
 		
-	 else								//·¢ËÍÐ¡³µ×ËÌ¬½Ç£¬ÔÚ²¨ÐÎ½çÃæÏÔÊ¾
-	   printf("{B%d:%d:%d}$",(int)Pitch,(int)Roll,(int)Yaw); //x£¬y£¬zÖá½Ç¶È ÔÚAPPÉÏÃæÏÔÊ¾²¨ÐÎ
-																													//¿É°´¸ñÊ½×ÔÐÐÔö¼ÓÏÔÊ¾²¨ÐÎ£¬×î¶à¿ÉÏÔÊ¾Îå¸ö
+	 else								//ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½Ç£ï¿½ï¿½Ú²ï¿½ï¿½Î½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾
+	   printf("{B%d:%d:%d}$",(int)Pitch,(int)Roll,(int)Yaw); //xï¿½ï¿½yï¿½ï¿½zï¿½ï¿½Ç¶ï¿½ ï¿½ï¿½APPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
+																													//ï¿½É°ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Î£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½
 }
 /**************************************************************************
 Function: Virtual oscilloscope sends data to upper computer
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºÐéÄâÊ¾²¨Æ÷ÍùÉÏÎ»»ú·¢ËÍÊý¾Ý ¹Ø±ÕÏÔÊ¾ÆÁ
-Èë¿Ú²ÎÊý£ºÎÞ
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ø±ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/
 void DataScope(void)
 {   
-	u8 i;//¼ÆÊý±äÁ¿
-	float Vol;								//µçÑ¹±äÁ¿
-	unsigned char Send_Count; //´®¿ÚÐèÒª·¢ËÍµÄÊý¾Ý¸öÊý
+	u8 i;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	float Vol;								//ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½
+	unsigned char Send_Count; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½Ý¸ï¿½ï¿½ï¿½
 	Vol=(float)Voltage/100;
-	DataScope_Get_Channel_Data( Angle_Balance, 1 );       //ÏÔÊ¾½Ç¶È µ¥Î»£º¶È£¨¡ã£©
-	DataScope_Get_Channel_Data( Distance/10, 2 );         //ÏÔÊ¾³¬Éù²¨²âÁ¿µÄ¾àÀë µ¥Î»£ºCM 
-	DataScope_Get_Channel_Data( Vol, 3 );                 //ÏÔÊ¾µç³ØµçÑ¹ µ¥Î»£ºV
+	DataScope_Get_Channel_Data( Angle_Balance, 1 );       //ï¿½ï¿½Ê¾ï¿½Ç¶ï¿½ ï¿½ï¿½Î»ï¿½ï¿½ï¿½È£ï¿½ï¿½ã£©
+	DataScope_Get_Channel_Data( Distance/10, 2 );         //ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½ ï¿½ï¿½Î»ï¿½ï¿½CM 
+	DataScope_Get_Channel_Data( Vol, 3 );                 //ï¿½ï¿½Ê¾ï¿½ï¿½Øµï¿½Ñ¹ ï¿½ï¿½Î»ï¿½ï¿½V
 //		DataScope_Get_Channel_Data( 0 , 4 );   
-//		DataScope_Get_Channel_Data(0, 5 ); //ÓÃÄúÒªÏÔÊ¾µÄÊý¾ÝÌæ»»0¾ÍÐÐÁË
-//		DataScope_Get_Channel_Data(0 , 6 );//ÓÃÄúÒªÏÔÊ¾µÄÊý¾ÝÌæ»»0¾ÍÐÐÁË
+//		DataScope_Get_Channel_Data(0, 5 ); //ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ»»0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//		DataScope_Get_Channel_Data(0 , 6 );//ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ»»0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //		DataScope_Get_Channel_Data(0, 7 );
 //		DataScope_Get_Channel_Data( 0, 8 ); 
 //		DataScope_Get_Channel_Data(0, 9 );  
@@ -226,9 +233,9 @@ void DataScope(void)
 Function: OLED_Show_CCD
 Input   : none
 Output  : none
-º¯Êý¹¦ÄÜ£ºCCDÄ£Ê½ÏÔÊ¾º¯Êý£¬»­µã
-Èë¿Ú²ÎÊý: ÎÞ 
-·µ»Ø  Öµ£ºÎÞ
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½CCDÄ£Ê½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ï¿½ï¿½Ú²ï¿½ï¿½ï¿½: ï¿½ï¿½ 
+ï¿½ï¿½ï¿½ï¿½  Öµï¿½ï¿½ï¿½ï¿½
 **************************************************************************/	 	
 
 void OLED_DrawPoint_Shu(u8 x,u8 y,u8 t)

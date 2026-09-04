@@ -25,6 +25,7 @@
 #include "gpio.h"
 #include "control.h"
 #include "TrackModule.h"
+#include "avoid_routine.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -42,35 +43,35 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-u8 Ros_count=0,Ros_Rate = 0,Ros_send_flag;                            //ROS·¢ËÍÊý¾ÝµÄÆµÂÊÊÇ10HZ£¬¶øÖÐ¶ÏÔÚ5msÒ»´Î¾Í»á°ÑÐ¡³µµÄÒÆ¶¯µÄÊý¾ÝÇå0£¬ÕâÊÇÎªÁËÈÃros¶Ë¿ØÖÆÐ¡³µÔË¶¯µÄ¸ü¼ÓË³³©µÄÒ»¸ö¼ÆÊý²ÎÊý
-u8  Pick_up_stop=0;                         //¼ì²éÊÇ·ñ±»ÄÃÆð±êÖ¾Î»
-int Middle_angle=0;                           //»úÐµÖÐÖµÄ¬ÈÏÎª0
-u16 Get_Voltage;                            //µç³ØµçÑ¹
-u8 Way_Angle=1;                             //»ñÈ¡½Ç¶ÈµÄËã·¨£¬1£ºËÄÔªÊý  2£º¿¨¶ûÂü  3£º»¥²¹ÂË²¨ 
-u16 Flag_front,Flag_back,Flag_Left,Flag_Right,Flag_velocity=2,Target_Velocity=300; //À¶ÑÀÒ£¿ØÏà¹ØµÄ±äÁ¿
-float RC_Velocity,RC_Turn_Velocity;			//Ò£¿Ø¿ØÖÆµÄËÙ¶È
-u8 Flag_Stop=1,Flag_Show=0;                 //µç»úÍ£Ö¹±êÖ¾Î»ºÍÏÔÊ¾±êÖ¾Î»  Ä¬ÈÏÍ£Ö¹ ÏÔÊ¾´ò¿ª
+u8 Ros_count=0,Ros_Rate = 0,Ros_send_flag;                            //ROSï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½Æµï¿½ï¿½ï¿½ï¿½10HZï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½5msÒ»ï¿½Î¾Í»ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½rosï¿½Ë¿ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+u8  Pick_up_stop=0;                         //ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾Î»
+int Middle_angle=0;                           //ï¿½ï¿½Ðµï¿½ï¿½ÖµÄ¬ï¿½ï¿½Îª0
+u16 Get_Voltage;                            //ï¿½ï¿½Øµï¿½Ñ¹
+u8 Way_Angle=1;                             //ï¿½ï¿½È¡ï¿½Ç¶Èµï¿½ï¿½ã·¨ï¿½ï¿½1ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½  2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ 
+u16 Flag_front,Flag_back,Flag_Left,Flag_Right,Flag_velocity=2,Target_Velocity=300; //ï¿½ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½ØµÄ±ï¿½ï¿½ï¿½
+float RC_Velocity,RC_Turn_Velocity;			//Ò£ï¿½Ø¿ï¿½ï¿½Æµï¿½ï¿½Ù¶ï¿½
+u8 Flag_Stop=1,Flag_Show=0;                 //ï¿½ï¿½ï¿½Í£Ö¹ï¿½ï¿½Ö¾Î»ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½Ö¾Î»  Ä¬ï¿½ï¿½Í£Ö¹ ï¿½ï¿½Ê¾ï¿½ï¿½
 u32 speed_left;
 u32 speed_right;
-u8 PS2_ON_Flag = 0,Remote_ON_Flag,Usart1_ON_Flag,PID_Send;		//Ä¬ÈÏËùÓÐ·½Ê½²»¿ØÖÆ
+u8 PS2_ON_Flag = 0,Remote_ON_Flag,Usart1_ON_Flag,PID_Send;		//Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½Ð·ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 u8 Mode = Track_Line_Patrol_Mode;             // fixed IRDM line patrol mode
-float Move_X,Move_Z;                          //¿ØÖÆÐ¡³µ±ÜÕÏ¡¢¸úËæÊ±Ç°½øµÄ±äÁ¿£¬×ªÍäµÄ±äÁ¿
+float Move_X,Move_Z;                          //ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½Ï¡ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ç°ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Ä±ï¿½ï¿½ï¿½
 u16 determine;
-int Encoder_Left,Encoder_Right;             					//×óÓÒ±àÂëÆ÷µÄÂö³å¼ÆÊý
-int Motor_Left,Motor_Right;                 //µç»úPWM±äÁ¿ Ó¦ÊÇMotorµÄ ÏòMotoÖÂ¾´	
-int Temperature;                            //ÎÂ¶È±äÁ¿
-int Voltage;                                //µç³ØµçÑ¹²ÉÑùÏà¹ØµÄ±äÁ¿
-float Angle_Balance,Gyro_Balance,Gyro_Turn; //Æ½ºâÇã½Ç Æ½ºâÍÓÂÝÒÇ ×ªÏòÍÓÂÝÒÇ
-u32 Distance;                               //À×´ï²â¾à
-volatile u8 delay_50; 						//ÑÓÊ±ºÍµ÷²ÎÏà¹Ø±äÁ¿
+int Encoder_Left,Encoder_Right;             					//ï¿½ï¿½ï¿½Ò±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+int Motor_Left,Motor_Right;                 //ï¿½ï¿½ï¿½PWMï¿½ï¿½ï¿½ï¿½ Ó¦ï¿½ï¿½Motorï¿½ï¿½ ï¿½ï¿½Motoï¿½Â¾ï¿½	
+int Temperature;                            //ï¿½Â¶È±ï¿½ï¿½ï¿½
+int Voltage;                                //ï¿½ï¿½Øµï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ØµÄ±ï¿½ï¿½ï¿½
+float Angle_Balance,Gyro_Balance,Gyro_Turn; //Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+u32 Distance;                               //ï¿½×´ï¿½ï¿½ï¿½
+volatile u8 delay_50; 						//ï¿½ï¿½Ê±ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½Ø±ï¿½ï¿½ï¿½
 volatile u8 delay_flag;
-int Time_count;                                 //¿ª»úÎÈ¶¨ÆÚ¼ÆÊý(¼ûcontrol.h START_DELAY),5msÖÐ¶ÏÖÐÀÛ¼Ó
-u8 Flag_follow=0,Flag_avoid=0,Flag_straight=0;							//À×´ï¸úËæ¡¢À×´ï±ÜÕÏ±êÖ¾Î»
-u8 Lidar_flag,Lidar_Detect = Lidar_Detect_ON;			    //Ñ²ÏßÄ£Ê½À×´ï¼ì²âÕÏ°­Îï£¬Ä¬ÈÏ¿ªÆô
-float Acceleration_Z;                       //ZÖá¼ÓËÙ¶È¼Æ  
-u8 CCD_Zhongzhi,CCD_Yuzhi;                  //ÏßÐÔCCDÏà¹Ø
-float Balance_Kp=27000,Balance_Kd=110,Velocity_Kp=400,Velocity_Ki=2,Turn_Kp=4200,Turn_Kd=100;//PID²ÎÊý£¨·Å´ó100±¶£©
-float Distance_KP =250,Distance_KD =10000 ;	//¾àÀëµ÷ÕûPID²ÎÊý
+int Time_count;                                 //ï¿½ï¿½ï¿½ï¿½ï¿½È¶ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½(ï¿½ï¿½control.h START_DELAY),5msï¿½Ð¶ï¿½ï¿½ï¿½ï¿½Û¼ï¿½
+u8 Flag_follow=0,Flag_avoid=0,Flag_straight=0;							//ï¿½×´ï¿½ï¿½ï¿½æ¡¢ï¿½×´ï¿½ï¿½ï¿½Ï±ï¿½Ö¾Î»
+u8 Lidar_flag,Lidar_Detect = Lidar_Detect_ON;			    //Ñ²ï¿½ï¿½Ä£Ê½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ï¿½ï£¬Ä¬ï¿½Ï¿ï¿½ï¿½ï¿½
+float Acceleration_Z;                       //Zï¿½ï¿½ï¿½ï¿½Ù¶È¼ï¿½  
+u8 CCD_Zhongzhi,CCD_Yuzhi;                  //ï¿½ï¿½ï¿½ï¿½CCDï¿½ï¿½ï¿½
+float Balance_Kp=27000,Balance_Kd=110,Velocity_Kp=400,Velocity_Ki=2,Turn_Kp=4200,Turn_Kd=100;//PIDï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å´ï¿½100ï¿½ï¿½ï¿½ï¿½
+float Distance_KP =250,Distance_KD =10000 ;	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PIDï¿½ï¿½ï¿½ï¿½
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -129,14 +130,15 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-	JTAG_Set(JTAG_SWD_DISABLE);     //¹Ø±ÕJTAG½Ó¿Ú
-	JTAG_Set(SWD_ENABLE);           //´ò¿ªSWD½Ó¿Ú ¿ÉÒÔÀûÓÃÖ÷°åµÄSWD½Ó¿Úµ÷ÊÔ
-	delay_init();                   //ÑÓ³Ùº¯Êý³õÊ¼»¯
+	JTAG_Set(JTAG_SWD_DISABLE);     //ï¿½Ø±ï¿½JTAGï¿½Ó¿ï¿½
+	JTAG_Set(SWD_ENABLE);           //ï¿½ï¿½SWDï¿½Ó¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SWDï¿½Ó¿Úµï¿½ï¿½ï¿½
+	delay_init();                   //ï¿½Ó³Ùºï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½
 	OLED_Init();                    //OLED
 	TrackModule_Init();             // enable IRDM sensors at boot
-	MPU6050_initialize();           //MPU6050³õÊ¼»¯	
-	DMP_Init();                     //³õÊ¼»¯DMP 	
-	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn); //¿ªÆôÒý½ÅÍâ²¿ÖÐ¶Ï
+	TrackAvoid_Init();
+	MPU6050_initialize();           //MPU6050ï¿½ï¿½Ê¼ï¿½ï¿½	
+	DMP_Init();                     //ï¿½ï¿½Ê¼ï¿½ï¿½DMP 	
+	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â²¿ï¿½Ð¶ï¿½
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -146,10 +148,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if(Flag_Show==0)          		//Ê¹ÓÃMiniBalance APPºÍOLEDÏÔÊ¾ÆÁ
+	  if(Flag_Show==0)          		//Ê¹ï¿½ï¿½MiniBalance APPï¿½ï¿½OLEDï¿½ï¿½Ê¾ï¿½ï¿½
 		{
-			 APP_Show();								//·¢ËÍÊý¾Ý¸øAPP
-			 oled_show();          			//ÏÔÊ¾ÆÁ´ò¿ª
+			 APP_Show();								//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¸ï¿½APP
+			 oled_show();          			//ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
 			if(Mode != Track_Line_Patrol_Mode)
 			{
 				PS2_Read();
@@ -157,17 +159,17 @@ int main(void)
 			 if(Ros_send_flag==1)		
 			{
 				data_transition();
-				USART1_SEND();                                    //¸øros¶Ë·¢ËÍÊý¾Ý 50msÒ»´Î
+				USART1_SEND();                                    //ï¿½ï¿½rosï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 50msÒ»ï¿½ï¿½
 				Ros_send_flag=0;
 			}		
 		}
-		else                      		//Ê¹ÓÃMiniBalanceÉÏÎ»»ú ÉÏÎ»»úÊ¹ÓÃµÄÊ±ºòÐèÒªÑÏ¸ñµÄÊ±Ðò£¬¹Ê´ËÊ±¹Ø±Õapp¼à¿Ø²¿·ÖºÍOLEDÏÔÊ¾ÆÁ
+		else                      		//Ê¹ï¿½ï¿½MiniBalanceï¿½ï¿½Î»ï¿½ï¿½ ï¿½ï¿½Î»ï¿½ï¿½Ê¹ï¿½Ãµï¿½Ê±ï¿½ï¿½ï¿½ï¿½Òªï¿½Ï¸ï¿½ï¿½Ê±ï¿½ò£¬¹Ê´ï¿½Ê±ï¿½Ø±ï¿½appï¿½ï¿½Ø²ï¿½ï¿½Öºï¿½OLEDï¿½ï¿½Ê¾ï¿½ï¿½
 		{
-			 DataScope();          			//¿ªÆôMiniBalanceÉÏÎ»»ú
+			 DataScope();          			//ï¿½ï¿½ï¿½ï¿½MiniBalanceï¿½ï¿½Î»ï¿½ï¿½
 		}
        
 		delay_flag=1;	
-		while(delay_flag);		       //Ê¾²¨Æ÷ÐèÒª50ms	¸ß¾«¶ÈÑÓÊ±£¬delayº¯Êý²»Âú×ãÒªÇó£¬¹ÊÊ¹ÓÃMPU6050ÖÐ¶ÏÌá¹©50msÑÓÊ±
+		while(delay_flag);		       //Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òª50ms	ï¿½ß¾ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½delayï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ó£¬¹ï¿½Ê¹ï¿½ï¿½MPU6050ï¿½Ð¶ï¿½ï¿½á¹©50msï¿½ï¿½Ê±
   }
   /* USER CODE END 3 */
 }

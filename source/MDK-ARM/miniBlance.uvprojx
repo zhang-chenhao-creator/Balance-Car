@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../MiniBalance_HARDWARE/beep;../MiniBalance_HARDWARE/DataScope_DP;../MiniBalance_HARDWARE/DMP;../SYSTEM/delay;../MiniBalance_HARDWARE/ENCODER;../MiniBalance_HARDWARE/IIC;../MiniBalance_HARDWARE/LED;../MiniBalance_HARDWARE/KEY;../MiniBalance_HARDWARE/Lidar;../MiniBalance_HARDWARE/OLED;../MiniBalance_HARDWARE/PSTWO;../MiniBalance/CONTROL;../MiniBalance_HARDWARE/USART3;../MiniBalance/ELE_CCD;../MiniBalance/filter;../MiniBalance_HARDWARE/MPU6050;../MiniBalance/show;../MiniBalance_HARDWARE/Remote;..\MiniBalance_HARDWARE\TrackModule</IncludePath>
+              <IncludePath>../Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../MiniBalance_HARDWARE/beep;../MiniBalance_HARDWARE/DataScope_DP;../MiniBalance_HARDWARE/DMP;../SYSTEM/delay;../MiniBalance_HARDWARE/ENCODER;../MiniBalance_HARDWARE/IIC;../MiniBalance_HARDWARE/LED;../MiniBalance_HARDWARE/KEY;../MiniBalance_HARDWARE/Lidar;../MiniBalance_HARDWARE/OLED;../MiniBalance_HARDWARE/PSTWO;../MiniBalance/CONTROL;../MiniBalance_HARDWARE/USART3;../MiniBalance/ELE_CCD;../MiniBalance/filter;../MiniBalance_HARDWARE/MPU6050;../MiniBalance/show;../MiniBalance_HARDWARE/Remote;../MiniBalance_HARDWARE/TrackModule;../MiniBalance_HARDWARE/ULTRASONIC</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -558,6 +558,21 @@
               <FileName>TrackModule.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\MiniBalance_HARDWARE\TrackModule\TrackModule.c</FilePath>
+            </File>
+            <File>
+              <FileName>obstacle_guard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\MiniBalance\CONTROL\obstacle_guard.c</FilePath>
+            </File>
+            <File>
+              <FileName>avoid_routine.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\MiniBalance\CONTROL\avoid_routine.c</FilePath>
+            </File>
+            <File>
+              <FileName>ultrasonic_service.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\MiniBalance_HARDWARE\ULTRASONIC\ultrasonic_service.c</FilePath>
             </File>
           </Files>
         </Group>
