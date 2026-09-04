@@ -246,7 +246,7 @@ class AvoidRoutineBehaviorTests(unittest.TestCase):
                     f"route harness failed with exit code {run_result.returncode}"
                 )
 
-    def test_complete_triangle_route_and_line_reentry(self):
+    def test_complete_double_polyline_route_and_line_reentry(self):
         harness = r"""
             #include <assert.h>
             #include "avoid_routine.h"
@@ -383,7 +383,7 @@ class AvoidRoutineBehaviorTests(unittest.TestCase):
 
 
 class SourceIntegrationTests(unittest.TestCase):
-    def test_triangle_states_and_tunable_defaults_are_present(self):
+    def test_double_polyline_states_and_tunable_defaults_are_present(self):
         header = AVOID_H.read_text(encoding="utf-8")
         source = AVOID_C.read_text(encoding="utf-8")
         for name in (
