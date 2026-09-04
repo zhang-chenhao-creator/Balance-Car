@@ -36,6 +36,7 @@ void ObstacleGuard_Init(ObstacleGuardContext *context, uint8_t enabled)
     context->has_valid_distance = 0;
     context->blocked_latched = 0;
     context->degraded_latched = 0;
+    context->blocked_samples = 0;
     context->release_samples = 0;
     context->recovery_samples = 0;
     context->previous_state = enabled ? OBSTACLE_GUARD_CLEAR : OBSTACLE_GUARD_DISABLED;
@@ -46,6 +47,7 @@ void ObstacleGuard_SetEnabled(ObstacleGuardContext *context, uint8_t enabled)
     context->enabled = enabled ? 1U : 0U;
     context->blocked_latched = 0;
     context->degraded_latched = 0;
+    context->blocked_samples = 0;
     context->release_samples = 0;
     context->recovery_samples = 0;
     context->previous_state = enabled ? OBSTACLE_GUARD_CLEAR : OBSTACLE_GUARD_DISABLED;
@@ -87,21 +89,31 @@ ObstacleGuardOutput ObstacleGuard_Update(ObstacleGuardContext *context,
 
             if (input->distance_mm <= output.stop_mm)
             {
-                context->blocked_latched = 1;
                 context->release_samples = 0;
-            }
-            else if (context->blocked_latched)
-            {
-                if (input->distance_mm >= release_mm)
+                if (!context->blocked_latched)
                 {
-                    if (context->release_samples < OBSTACLE_GUARD_RELEASE_SAMPLES)
-                        context->release_samples++;
-                    if (context->release_samples >= OBSTACLE_GUARD_RELEASE_SAMPLES)
-                        context->blocked_latched = 0;
+                    if (context->blocked_samples < OBSTACLE_GUARD_BLOCK_SAMPLES)
+                        context->blocked_samples++;
+                    if (context->blocked_samples >= OBSTACLE_GUARD_BLOCK_SAMPLES)
+                        context->blocked_latched = 1;
                 }
-                else
+            }
+            else
+            {
+                context->blocked_samples = 0;
+                if (context->blocked_latched)
                 {
-                    context->release_samples = 0;
+                    if (input->distance_mm >= release_mm)
+                    {
+                        if (context->release_samples < OBSTACLE_GUARD_RELEASE_SAMPLES)
+                            context->release_samples++;
+                        if (context->release_samples >= OBSTACLE_GUARD_RELEASE_SAMPLES)
+                            context->blocked_latched = 0;
+                    }
+                    else
+                    {
+                        context->release_samples = 0;
+                    }
                 }
             }
 
@@ -122,6 +134,7 @@ ObstacleGuardOutput ObstacleGuard_Update(ObstacleGuardContext *context,
         }
         else
         {
+            context->blocked_samples = 0;
             context->release_samples = 0;
             context->recovery_samples = 0;
             if (input->miss_count >= OBSTACLE_GUARD_MISS_LIMIT)
@@ -136,7 +149,8 @@ ObstacleGuardOutput ObstacleGuard_Update(ObstacleGuardContext *context,
     else
     {
         control_distance = input->sample_valid ? input->distance_mm : context->last_distance_mm;
-        if (context->has_valid_distance && control_distance < output.slow_mm)
+        if (context->blocked_samples > 0U ||
+            (context->has_valid_distance && control_distance < output.slow_mm))
             state = OBSTACLE_GUARD_SLOW;
         else
             state = OBSTACLE_GUARD_CLEAR;
@@ -159,13 +173,25 @@ ObstacleGuardOutput ObstacleGuard_Update(ObstacleGuardContext *context,
         }
         else if (state == OBSTACLE_GUARD_SLOW)
         {
+            int32_t slow_speed;
             control_distance = input->sample_valid ? input->distance_mm : context->last_distance_mm;
             if (control_distance <= output.stop_mm)
-                output.allowed_speed_mm_s = 0;
+            {
+                output.allowed_speed_mm_s = Clamp_Int32(input->requested_speed_mm_s,
+                                                        0,
+                                                        OBSTACLE_GUARD_CONFIRM_MAX_MM_S);
+            }
             else
-                output.allowed_speed_mm_s = input->requested_speed_mm_s *
+            {
+                slow_speed = input->requested_speed_mm_s *
                     (int32_t)(control_distance - output.stop_mm) /
                     (int32_t)OBSTACLE_GUARD_SLOW_MARGIN_MM;
+                if (slow_speed < OBSTACLE_GUARD_CONFIRM_MAX_MM_S)
+                    slow_speed = OBSTACLE_GUARD_CONFIRM_MAX_MM_S;
+                output.allowed_speed_mm_s = Clamp_Int32(slow_speed,
+                                                        0,
+                                                        input->requested_speed_mm_s);
+            }
         }
     }
 

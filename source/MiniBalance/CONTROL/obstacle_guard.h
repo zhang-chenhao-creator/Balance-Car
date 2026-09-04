@@ -13,7 +13,9 @@
 #define OBSTACLE_GUARD_RELEASE_MARGIN_MM      80U
 #define OBSTACLE_GUARD_REFERENCE_MAX_MM_S    800
 #define OBSTACLE_GUARD_DEGRADED_MAX_MM_S     100
+#define OBSTACLE_GUARD_CONFIRM_MAX_MM_S        80
 #define OBSTACLE_GUARD_MISS_LIMIT              3U
+#define OBSTACLE_GUARD_BLOCK_SAMPLES            3U
 #define OBSTACLE_GUARD_RELEASE_SAMPLES         3U
 #define OBSTACLE_GUARD_RECOVERY_SAMPLES        2U
 
@@ -54,6 +56,7 @@ typedef struct
     uint8_t has_valid_distance;
     uint8_t blocked_latched;
     uint8_t degraded_latched;
+    uint8_t blocked_samples;
     uint8_t release_samples;
     uint8_t recovery_samples;
     uint8_t previous_state;
