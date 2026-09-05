@@ -18,8 +18,7 @@ extern u8    Lidar_Detect;
 #define AVOID_BRAKE_STABLE_TICKS  6U     /* 30ms */
 #define AVOID_STOP_SPEED_MM_S     50.0f
 #define AVOID_TURN_TIMEOUT        1000U  /* 5s */
-#define AVOID_REENTER_CONFIRM     3U
-#define AVOID_REENTER_MIN_TICKS   20U    /* 100ms */
+#define AVOID_LINE_ADVANCE_TIMEOUT 120U  /* 600ms */
 #define AVOID_REENTER_TIMEOUT     240U   /* 1.2s */
 #define AVOID_COOLDOWN_TICKS      400U   /* 2s */
 #define AVOID_SPEED_RISE_STEP     5.0f
@@ -34,6 +33,7 @@ u8 Guard_State  = OBSTACLE_GUARD_CLEAR;
 float Avoid_RightAngleDeg = 45.0f;
 float Avoid_LeftAngleDeg  = 90.0f;
 float Avoid_DiagonalMm    = 150.0f;
+float Avoid_LineAdvanceMm = 30.0f;
 float Avoid_SearchMaxMm   = 800.0f;
 float Avoid_ArcSpeed      = 120.0f;
 float Avoid_DiagonalSpeed = 160.0f;
@@ -41,12 +41,12 @@ float Avoid_SearchSpeed   = 140.0f;
 float Avoid_ReenterSpeed  = 140.0f;
 float Avoid_ArcTurnTarget = 27.0f;
 float Avoid_ReenterTurnTarget = 27.0f;
+float Avoid_ReenterAngleDeg = 45.0f;
 float Avoid_BrakeFallStep = 10.0f;
 
 static ObstacleGuardContext s_guard;
 static u8    s_guard_enabled_prev = 0xFF;
 static u8    s_route_guard_armed;
-static u8    s_center_confirm;
 static u8    s_stop_confirm;
 static u16   s_state_ticks;
 static u16   s_cooldown;
@@ -78,7 +78,6 @@ static void Avoid_EnterState(u8 next)
     s_state_ticks = 0;
     s_odom_mm = 0;
     s_turn_deg = 0;
-    s_center_confirm = 0;
     s_stop_confirm = 0;
 }
 
@@ -93,7 +92,9 @@ static void Avoid_AccumulateMotion(void)
                      Avoid_Abs((float)Encoder_Right)) * 0.5f * ENCODER_TO_MM;
 
     s_odom_mm += step_mm;
-    if (Avoid_State == AVOID_SEARCH_LINE || Avoid_State == AVOID_REENTER_LINE)
+    if (Avoid_State == AVOID_SEARCH_LINE ||
+        Avoid_State == AVOID_LINE_ADVANCE ||
+        Avoid_State == AVOID_REENTER_LINE)
         s_search_total_mm += step_mm;
     s_turn_deg += Avoid_Abs(Gyro_Turn) * GYRO_Z_TO_DPS * CONTROL_PERIOD_S;
 }
@@ -234,11 +235,32 @@ static void AvoidRoutine_Update5ms(u8 obstacle_entered)
             Avoid_Abort();
             break;
         }
-        /* 竞速模式：任一路首次压线，当周期立即锁定物理右转。 */
+        /* 任一路首次压线后，先让黑线从外侧进入中间探头区域。 */
         if (Avoid_OnLine())
         {
-            Avoid_EnterState(AVOID_REENTER_LINE);
+            Avoid_EnterState(AVOID_LINE_ADVANCE);
             break;
+        }
+        break;
+
+    case AVOID_LINE_ADVANCE:
+        if (s_route_guard_armed && obstacle_entered)
+        {
+            Avoid_Abort();
+            break;
+        }
+        if (s_search_total_mm >= Avoid_SearchMaxMm)
+        {
+            Avoid_Abort();
+            break;
+        }
+        if (s_odom_mm >= Avoid_LineAdvanceMm)
+        {
+            Avoid_EnterState(AVOID_REENTER_LINE);
+        }
+        else if (s_state_ticks >= AVOID_LINE_ADVANCE_TIMEOUT)
+        {
+            Avoid_Abort();
         }
         break;
 
@@ -253,18 +275,8 @@ static void AvoidRoutine_Update5ms(u8 obstacle_entered)
             Avoid_Abort();
             break;
         }
-        /* 首次压线后继续锁定右转，短暂丢线不再退回直行搜线。 */
-        if (Track_state == STATE_STRAIGHT)
-        {
-            if (s_center_confirm < AVOID_REENTER_CONFIRM)
-                s_center_confirm++;
-        }
-        else
-        {
-            s_center_confirm = 0;
-        }
-        if (s_state_ticks >= AVOID_REENTER_MIN_TICKS &&
-            s_center_confirm >= AVOID_REENTER_CONFIRM)
+        /* 回正只依赖陀螺仪角度，不再等待中间两路识别1001。 */
+        if (s_turn_deg >= Avoid_ReenterAngleDeg)
         {
             Avoid_Active = 0;
             s_cooldown = AVOID_COOLDOWN_TICKS;
@@ -326,6 +338,7 @@ static void Avoid_ComputeOutputs(void)
         break;
 
     case AVOID_SEARCH_LINE:
+    case AVOID_LINE_ADVANCE:
         s_avoid_speed = Avoid_Ramp(s_avoid_speed, Avoid_SearchSpeed,
                                    AVOID_SPEED_RISE_STEP, Avoid_BrakeFallStep);
         Patrol_Speed_Cmd = s_avoid_speed;

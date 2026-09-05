@@ -1,6 +1,7 @@
 /***********************************************
  * 45度双折线避障：确认 -> 制动停车 -> 右45度移动弧线
- *                 -> 斜行 -> 左90度移动弧线 -> 搜线回巡
+ *                 -> 斜行 -> 左90度移动弧线 -> 搜线
+ *                 -> 压线后直行30mm -> 右45度回巡
  * 固定向右绕行，不依赖路口或8字路线状态机。
  ***********************************************/
 #ifndef __AVOID_ROUTINE_H
@@ -22,7 +23,8 @@ typedef enum
     AVOID_ARC_LEFT,
     AVOID_SEARCH_LINE,
     AVOID_REENTER_LINE,
-    AVOID_ABORT_HOLD
+    AVOID_ABORT_HOLD,
+    AVOID_LINE_ADVANCE
 } AvoidState_t;
 
 extern u8 Avoid_Active;
@@ -34,6 +36,7 @@ extern u8 Guard_State;
 extern float Avoid_RightAngleDeg;
 extern float Avoid_LeftAngleDeg;
 extern float Avoid_DiagonalMm;
+extern float Avoid_LineAdvanceMm;
 extern float Avoid_SearchMaxMm;
 extern float Avoid_ArcSpeed;
 extern float Avoid_DiagonalSpeed;
@@ -41,6 +44,7 @@ extern float Avoid_SearchSpeed;
 extern float Avoid_ReenterSpeed;
 extern float Avoid_ArcTurnTarget;
 extern float Avoid_ReenterTurnTarget;
+extern float Avoid_ReenterAngleDeg;
 extern float Avoid_BrakeFallStep;
 
 void TrackAvoid_Init(void);

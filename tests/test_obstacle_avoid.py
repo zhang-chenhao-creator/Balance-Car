@@ -243,7 +243,9 @@ class AvoidRoutineBehaviorTests(unittest.TestCase):
             run_result = subprocess.run([str(executable)], capture_output=True, text=True)
             if run_result.returncode:
                 raise AssertionError(
-                    f"route harness failed with exit code {run_result.returncode}"
+                    f"route harness failed with exit code {run_result.returncode}\n"
+                    + run_result.stdout
+                    + run_result.stderr
                 )
 
     def test_complete_double_polyline_route_and_line_reentry(self):
@@ -310,22 +312,31 @@ class AvoidRoutineBehaviorTests(unittest.TestCase):
                 Gyro_Turn = 0;
                 Track_state = STATE_LEFT_SMALL;
                 tick();
-                assert(Avoid_State == AVOID_REENTER_LINE);
-                assert(Patrol_Turn_Cmd > 0.0f);
+                assert(Avoid_State == AVOID_LINE_ADVANCE);
+                assert(Patrol_Turn_Cmd == 0.0f);
 
-                /* Once contact is latched, a brief line loss keeps turning right. */
+                /* Contact is latched: later sensor loss cannot cancel the 30mm advance. */
                 Track_state = STATE_LOST;
+                Encoder_Left = 171; Encoder_Right = 171;
+                for (i = 0; i < 50; ++i) tick();
+                assert(Avoid_State == AVOID_LINE_ADVANCE);
+                assert(Patrol_Turn_Cmd == 0.0f);
                 tick();
                 assert(Avoid_State == AVOID_REENTER_LINE);
                 assert(Patrol_Turn_Cmd > 0.0f);
 
+                /* Even a centered sensor pattern cannot finish angle-based reentry. */
+                Encoder_Left = 0; Encoder_Right = 0;
                 Track_state = STATE_STRAIGHT;
-                for (i = 0; i < 18; ++i) tick();
+                for (i = 0; i < 20; ++i) tick();
                 assert(Avoid_State == AVOID_REENTER_LINE);
-                tick();
+
+                Gyro_Turn = 1476.0f;
+                for (i = 0; i < 110 && Avoid_State == AVOID_REENTER_LINE; ++i) tick();
                 assert(Avoid_State == AVOID_IDLE);
                 assert(Avoid_Active == 0);
                 assert(Patrol_Speed_Cmd == 140.0f);
+                Gyro_Turn = 0;
                 for (i = 0; i < 52; ++i) tick();
                 assert(Patrol_Speed_Cmd == 400.0f);
                 return 0;
@@ -418,10 +429,102 @@ class AvoidRoutineBehaviorTests(unittest.TestCase):
                 Encoder_Left = 30000; Encoder_Right = 30000;
                 Track_state = STATE_LEFT_SMALL;
                 tick();
+                assert(Avoid_State == AVOID_LINE_ADVANCE);
+                assert(Patrol_Turn_Cmd == 0.0f);
+                Track_state = STATE_LOST;
+                tick();
                 assert(Avoid_State == AVOID_REENTER_LINE);
                 assert(Patrol_Turn_Cmd > 0.0f);
-                Track_state = STATE_LOST;
                 for (i = 0; i < 10 && Avoid_State == AVOID_REENTER_LINE; ++i) tick();
+                assert(Avoid_State == AVOID_ABORT_HOLD);
+                return 0;
+            }
+        """
+        self._compile_route_harness(harness)
+
+    def test_line_advance_and_reentry_sensor_timeouts_enter_safe_hold(self):
+        harness = r"""
+            #include <assert.h>
+            #include "avoid_routine.h"
+            #include "ultrasonic_service.h"
+            #include "TrackModule.h"
+
+            int Encoder_Left = 0, Encoder_Right = 0;
+            float Gyro_Turn = 0;
+            u8 Lidar_Detect = 1;
+            float Velocity_Left = 0, Velocity_Right = 0;
+            float base_speed_mm = 400;
+            float turn_diff = 0;
+            float Track_Turn_Scale = 0.7f;
+            u8 Track_state = STATE_LOST;
+            static UsSnapshot snapshot;
+
+            void UltrasonicService_Init(void) { snapshot.sample_id = 0; snapshot.valid = 0; snapshot.miss_count = 0; }
+            void UltrasonicService_Update5ms(void) { }
+            void UltrasonicService_GetSnapshot(UsSnapshot *snap) { *snap = snapshot; }
+            static void tick(void) { TrackAvoid_Supervisor5ms(); }
+            static void sample(u32 distance) { snapshot.sample_id++; snapshot.valid = 1; snapshot.distance_mm = distance; tick(); }
+
+            static void reach_search_line(void)
+            {
+                int i;
+                Encoder_Left = 0; Encoder_Right = 0;
+                Gyro_Turn = 0;
+                Track_state = STATE_LOST;
+                sample(250); sample(250); sample(250);
+                for (i = 0; i < 220 && Avoid_State == AVOID_BRAKE; ++i) tick();
+                assert(Avoid_State == AVOID_STOP_SETTLE);
+                for (i = 0; i < 40; ++i) tick();
+                assert(Avoid_State == AVOID_ARC_RIGHT);
+
+                snapshot.sample_id++; snapshot.distance_mm = 1000;
+                Gyro_Turn = 1476.0f;
+                for (i = 0; i < 120 && Avoid_State == AVOID_ARC_RIGHT; ++i) tick();
+                assert(Avoid_State == AVOID_DIAGONAL);
+                Gyro_Turn = 0;
+                Encoder_Left = 50000; Encoder_Right = 50000;
+                tick();
+                assert(Avoid_State == AVOID_ARC_LEFT);
+                Encoder_Left = 0; Encoder_Right = 0;
+                Gyro_Turn = 1476.0f;
+                for (i = 0; i < 220 && Avoid_State == AVOID_ARC_LEFT; ++i) tick();
+                assert(Avoid_State == AVOID_SEARCH_LINE);
+            }
+
+            static void reset_after_abort(void)
+            {
+                Lidar_Detect = 0; tick();
+                assert(Avoid_State == AVOID_IDLE);
+                Lidar_Detect = 1; tick();
+            }
+
+            int main(void)
+            {
+                int i;
+                TrackAvoid_Init();
+                for (i = 0; i < 80; ++i) tick();
+
+                reach_search_line();
+                Track_state = STATE_LEFT_SMALL;
+                tick();
+                assert(Avoid_State == AVOID_LINE_ADVANCE);
+                Track_state = STATE_LOST;
+                Encoder_Left = 0; Encoder_Right = 0;
+                for (i = 0; i < 120 && Avoid_State == AVOID_LINE_ADVANCE; ++i) tick();
+                assert(Avoid_State == AVOID_ABORT_HOLD);
+
+                reset_after_abort();
+                reach_search_line();
+                Track_state = STATE_LEFT_SMALL;
+                tick();
+                assert(Avoid_State == AVOID_LINE_ADVANCE);
+                Track_state = STATE_LOST;
+                Encoder_Left = 30000; Encoder_Right = 30000;
+                tick();
+                assert(Avoid_State == AVOID_REENTER_LINE);
+                Encoder_Left = 0; Encoder_Right = 0;
+                Gyro_Turn = 0;
+                for (i = 0; i < 240 && Avoid_State == AVOID_REENTER_LINE; ++i) tick();
                 assert(Avoid_State == AVOID_ABORT_HOLD);
                 return 0;
             }
@@ -442,6 +545,7 @@ class SourceIntegrationTests(unittest.TestCase):
             "AVOID_SEARCH_LINE",
             "AVOID_REENTER_LINE",
             "AVOID_ABORT_HOLD",
+            "AVOID_LINE_ADVANCE",
         ):
             self.assertIn(name, header)
         self.assertIn("Avoid_RightAngleDeg = 45.0f", source)
@@ -451,6 +555,9 @@ class SourceIntegrationTests(unittest.TestCase):
         self.assertIn("Avoid_SearchSpeed   = 140.0f", source)
         self.assertIn("Avoid_ReenterSpeed  = 140.0f", source)
         self.assertIn("Avoid_ReenterTurnTarget = 27.0f", source)
+        self.assertIn("Avoid_LineAdvanceMm = 30.0f", source)
+        self.assertIn("Avoid_ReenterAngleDeg = 45.0f", source)
+        self.assertIn("AVOID_LINE_ADVANCE_TIMEOUT 120U", source)
 
     def test_ultrasonic_period_and_stable_line_follow_are_preserved(self):
         ultrasonic = US_H.read_text(encoding="utf-8")
