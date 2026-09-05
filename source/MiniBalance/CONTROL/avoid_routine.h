@@ -36,9 +36,11 @@ extern float Avoid_LeftAngleDeg;
 extern float Avoid_DiagonalMm;
 extern float Avoid_SearchMaxMm;
 extern float Avoid_ArcSpeed;
+extern float Avoid_DiagonalSpeed;
 extern float Avoid_SearchSpeed;
 extern float Avoid_ReenterSpeed;
 extern float Avoid_ArcTurnTarget;
+extern float Avoid_ReenterTurnTarget;
 extern float Avoid_BrakeFallStep;
 
 void TrackAvoid_Init(void);

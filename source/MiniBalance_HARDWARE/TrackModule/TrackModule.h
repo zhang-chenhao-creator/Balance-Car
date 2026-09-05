@@ -26,7 +26,7 @@ All rights reserved
 
 /*============================================================================*
  * 传感器引脚定义（4路数字量红外巡线模块，接扩展接口，与PS2手柄共用）		 *
- * 识别到黑线时为1															 *
+ * 现场标定：黑线为0，白底为1。模块指示灯亮灭不等同于GPIO电平。       *
  *============================================================================*/
 #define DH4 PBin(8)
 #define DH3 PCin(9)
@@ -48,9 +48,12 @@ extern float Track_Turn_Scale; // 转向差速(mm/s) 换算到转向环目标幅
 extern float Track_Speed_RiseStep;  // 每个5ms周期允许的加速步长（mm/s）
 extern float Track_Speed_FallStep;  // 每个5ms周期允许的减速步长（mm/s）
 extern u8 Track_CenterConfirmCycles; // 恢复直行前需要连续确认的周期数
+extern float Track_TurnAttackStep;   // 每个5ms周期允许的转向增强步长
+extern float Track_TurnReleaseStep;  // 每个5ms周期允许的转向减弱步长
+extern u8 Track_TurnConfirmCycles;   // 减弱或反向指令的连续确认周期数
 
 /*==============================传感器状态定义==============================*
- * 识别到黑线时为1, sensor_state = (DH1<<3)|(DH2<<2)|(DH3<<1)|DH4			   *
+ * 黑线为0，白底为1, sensor_state = (DH1<<3)|(DH2<<2)|(DH3<<1)|DH4       *
  *============================================================================*/
 typedef enum {
     STATE_CROSS         = 0,    // 0000 - 十字路口

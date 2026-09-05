@@ -33,6 +33,9 @@ float Track_Turn_Scale = 0.7f; // turn_diff(mm/s) → 转向环目标幅值 的�
 float Track_Speed_RiseStep = 5;  // 每个5ms周期允许的加速步长（mm/s）
 float Track_Speed_FallStep = 10; // 每个5ms周期允许的减速步长（mm/s）
 u8 Track_CenterConfirmCycles = 3; // 恢复直行前需要连续确认的周期数
+float Track_TurnAttackStep = 20;  // 紧急加大纠偏时每5ms最多增加的转向量
+float Track_TurnReleaseStep = 10; // 减弱纠偏/换向回零时每5ms最多变化的转向量
+u8 Track_TurnConfirmCycles = 2;   // 减弱或反向信号需连续确认，滤掉单帧跳变
 
 /* 传感器状态定义见 TrackModule.h 中的 SensorState_t */
 
@@ -42,6 +45,81 @@ u8 Track_state = 0;     // 最新识别的传感器状态(供OLED显示)
 
 static int Track_SpeedState = STATE_STRAIGHT;
 static u8 Track_CenterStableCount = 0;
+static float Track_AcceptedTurn = 0;
+static float Track_CandidateTurn = 0;
+static u8 Track_TurnCandidateCount = 0;
+
+static float Track_Abs(float value)
+{
+    return (value < 0.0f) ? -value : value;
+}
+
+static u8 Track_SameDirection(float left, float right)
+{
+    return ((left > 0.0f && right > 0.0f) ||
+            (left < 0.0f && right < 0.0f)) ? 1U : 0U;
+}
+
+/*
+ * 同向更强纠偏立即接受；减弱或换向必须稳定出现两帧。
+ * 最终指令再做幅值斜坡，换向时先回到0，不跨零跳变。
+ */
+static float Track_FilterTurn(float current, float raw_target)
+{
+    float step;
+
+    if (raw_target == Track_AcceptedTurn)
+    {
+        Track_CandidateTurn = raw_target;
+        Track_TurnCandidateCount = 0;
+    }
+    else if ((Track_AcceptedTurn == 0.0f && raw_target != 0.0f) ||
+             (Track_SameDirection(Track_AcceptedTurn, raw_target) &&
+              Track_Abs(raw_target) > Track_Abs(Track_AcceptedTurn)))
+    {
+        Track_AcceptedTurn = raw_target;
+        Track_CandidateTurn = raw_target;
+        Track_TurnCandidateCount = 0;
+    }
+    else
+    {
+        if (raw_target == Track_CandidateTurn)
+        {
+            if (Track_TurnCandidateCount < Track_TurnConfirmCycles)
+                Track_TurnCandidateCount++;
+        }
+        else
+        {
+            Track_CandidateTurn = raw_target;
+            Track_TurnCandidateCount = 1;
+        }
+
+        if (Track_TurnCandidateCount >= Track_TurnConfirmCycles)
+        {
+            Track_AcceptedTurn = raw_target;
+            Track_TurnCandidateCount = 0;
+        }
+    }
+
+    if (current == Track_AcceptedTurn)
+        return current;
+
+    if (current * Track_AcceptedTurn < 0.0f)
+    {
+        if (Track_Abs(current) <= Track_TurnReleaseStep)
+            return 0.0f;
+        return current + ((current > 0.0f) ?
+                          -Track_TurnReleaseStep : Track_TurnReleaseStep);
+    }
+
+    step = (Track_Abs(Track_AcceptedTurn) > Track_Abs(current)) ?
+           Track_TurnAttackStep : Track_TurnReleaseStep;
+    if (Track_AcceptedTurn > current + step)
+        return current + step;
+    if (Track_AcceptedTurn < current - step)
+        return current - step;
+    return Track_AcceptedTurn;
+}
 
 /*=============================================================================*
  * 速度目标与实际下发值之间的斜坡限制                                     *
@@ -120,6 +198,7 @@ static float Track_TargetSpeedForState(int sensor_state)
 void IRDM_line_inspection(void)
 {
     static int last_state = 0;// 记录上一次的状态
+    float raw_turn = Track_AcceptedTurn;
 
     // 读取传感器状态：4个传感器组合值
     int sensor_state = (DH1 << 3) | (DH2 << 2) | (DH3 << 1) | DH4;
@@ -130,40 +209,40 @@ void IRDM_line_inspection(void)
     switch (sensor_state)
     {
        case STATE_CROSS:// 交叉路口处理
-			turn_diff = 0;
+			raw_turn = 0;
             break;
         case STATE_LEFT_90_A: // 左直角弯
 		case STATE_LEFT_90_B: // 左直角弯
-            turn_diff = Turn90Angle;
+            raw_turn = Turn90Angle;
             break;
         case STATE_RIGHT_90_A: // 右直角弯
 		case STATE_RIGHT_90_B: // 右直角弯
-            turn_diff = -Turn90Angle;
+            raw_turn = -Turn90Angle;
             break;
         case STATE_LEFT_BIG://左大弯
-            turn_diff = TurnMaxAngle;
+            raw_turn = TurnMaxAngle;
             break;
         case STATE_RIGHT_BIG://右大弯
-            turn_diff = -TurnMaxAngle;
+            raw_turn = -TurnMaxAngle;
             break;
         case STATE_LEFT_SMALL://左微调
-            turn_diff = TurnMinAngle;
+            raw_turn = TurnMinAngle;
             break;
         case STATE_RIGHT_SMALL://右微调
-            turn_diff = -TurnMinAngle;
+            raw_turn = -TurnMinAngle;
             break;
         case STATE_STRAIGHT://直行
-            turn_diff = 0;
+            raw_turn = 0;
             break;
         case STATE_LOST://丢线处理
-            if (last_state == STATE_LEFT_SMALL) turn_diff = TurnMidAngle;//继续左转
-			else if (last_state == STATE_RIGHT_SMALL) turn_diff = -TurnMidAngle;//继续右转
-			else if(last_state == STATE_LEFT_BIG ) turn_diff = TurnMaxAngle;//继续左转
-			else if(last_state == STATE_RIGHT_BIG ) turn_diff = -TurnMaxAngle;//继续右转
+			if (last_state == STATE_LEFT_SMALL) raw_turn = TurnMidAngle;//继续左转
+			else if (last_state == STATE_RIGHT_SMALL) raw_turn = -TurnMidAngle;//继续右转
+			else if(last_state == STATE_LEFT_BIG ) raw_turn = TurnMaxAngle;//继续左转
+			else if(last_state == STATE_RIGHT_BIG ) raw_turn = -TurnMaxAngle;//继续右转
 			//其余情况维持上一次的转向(与参考例程一致)
             break;
         default: // 未定义状态，直行
-            turn_diff = 0;
+            raw_turn = 0;
             break;
     }
 	//保存传感器状态
@@ -171,6 +250,7 @@ void IRDM_line_inspection(void)
 	{
 		last_state=sensor_state;
 	}
+    turn_diff = Track_FilterTurn(turn_diff, raw_turn);
     /*
      * 速度不再随状态直接跳变：先得到离散目标，再通过斜坡限制实际速度。
      * 1001 恢复到直道时需要连续确认，进入弯道或异常状态则立即降目标。
@@ -197,6 +277,9 @@ void TrackModule_Init(void)
 	Track_state = 0;
 	Track_SpeedState = STATE_STRAIGHT;
 	Track_CenterStableCount = 0;
+	Track_AcceptedTurn = 0;
+	Track_CandidateTurn = 0;
+	Track_TurnCandidateCount = 0;
 
 	__HAL_RCC_GPIOC_CLK_ENABLE();      // 使能 GPIOC 时钟
 	__HAL_RCC_GPIOB_CLK_ENABLE();      // 使能 GPIOB 时钟

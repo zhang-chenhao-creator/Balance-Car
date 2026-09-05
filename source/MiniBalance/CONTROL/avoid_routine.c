@@ -13,14 +13,13 @@ extern u8    Lidar_Detect;
 #define GYRO_Z_TO_DPS             (1.0f / 16.4f)
 #define CONTROL_PERIOD_S          0.005f
 
-#define AVOID_STOP_SETTLE_TICKS   80U    /* 400ms */
+#define AVOID_STOP_SETTLE_TICKS   40U    /* 200ms */
 #define AVOID_BRAKE_TIMEOUT       200U   /* 1s */
 #define AVOID_BRAKE_STABLE_TICKS  6U     /* 30ms */
 #define AVOID_STOP_SPEED_MM_S     50.0f
 #define AVOID_TURN_TIMEOUT        1000U  /* 5s */
-#define AVOID_LINE_CONFIRM        3U
-#define AVOID_REENTER_CONFIRM     6U
-#define AVOID_REENTER_MIN_TICKS   40U    /* 200ms */
+#define AVOID_REENTER_CONFIRM     3U
+#define AVOID_REENTER_MIN_TICKS   20U    /* 100ms */
 #define AVOID_REENTER_TIMEOUT     240U   /* 1.2s */
 #define AVOID_COOLDOWN_TICKS      400U   /* 2s */
 #define AVOID_SPEED_RISE_STEP     5.0f
@@ -34,18 +33,19 @@ u8 Guard_State  = OBSTACLE_GUARD_CLEAR;
 
 float Avoid_RightAngleDeg = 45.0f;
 float Avoid_LeftAngleDeg  = 90.0f;
-float Avoid_DiagonalMm    = 300.0f;
+float Avoid_DiagonalMm    = 150.0f;
 float Avoid_SearchMaxMm   = 800.0f;
 float Avoid_ArcSpeed      = 120.0f;
-float Avoid_SearchSpeed   = 100.0f;
-float Avoid_ReenterSpeed  = 120.0f;
+float Avoid_DiagonalSpeed = 160.0f;
+float Avoid_SearchSpeed   = 140.0f;
+float Avoid_ReenterSpeed  = 140.0f;
 float Avoid_ArcTurnTarget = 27.0f;
+float Avoid_ReenterTurnTarget = 27.0f;
 float Avoid_BrakeFallStep = 10.0f;
 
 static ObstacleGuardContext s_guard;
 static u8    s_guard_enabled_prev = 0xFF;
 static u8    s_route_guard_armed;
-static u8    s_line_confirm;
 static u8    s_center_confirm;
 static u8    s_stop_confirm;
 static u16   s_state_ticks;
@@ -78,7 +78,6 @@ static void Avoid_EnterState(u8 next)
     s_state_ticks = 0;
     s_odom_mm = 0;
     s_turn_deg = 0;
-    s_line_confirm = 0;
     s_center_confirm = 0;
     s_stop_confirm = 0;
 }
@@ -126,13 +125,6 @@ static u8 Avoid_AngleDone(float target_deg)
 static u8 Avoid_OnLine(void)
 {
     return (Track_state != STATE_LOST) ? 1U : 0U;
-}
-
-static u8 Avoid_NearCenter(void)
-{
-    return (Track_state == STATE_STRAIGHT ||
-            Track_state == STATE_LEFT_SMALL ||
-            Track_state == STATE_RIGHT_SMALL) ? 1U : 0U;
 }
 
 static void Avoid_Abort(void)
@@ -208,7 +200,7 @@ static void AvoidRoutine_Update5ms(u8 obstacle_entered)
             Avoid_Abort();
             break;
         }
-        done = Avoid_DistanceDone(Avoid_DiagonalMm, Avoid_ArcSpeed);
+        done = Avoid_DistanceDone(Avoid_DiagonalMm, Avoid_DiagonalSpeed);
         if (done == 1U)
             Avoid_EnterState(AVOID_ARC_LEFT);
         else if (done == 2U)
@@ -237,22 +229,17 @@ static void AvoidRoutine_Update5ms(u8 obstacle_entered)
             Avoid_Abort();
             break;
         }
+        if (s_search_total_mm >= Avoid_SearchMaxMm)
+        {
+            Avoid_Abort();
+            break;
+        }
+        /* 竞速模式：任一路首次压线，当周期立即锁定物理右转。 */
         if (Avoid_OnLine())
         {
-            if (s_line_confirm < AVOID_LINE_CONFIRM)
-                s_line_confirm++;
-            if (s_line_confirm >= AVOID_LINE_CONFIRM)
-            {
-                Avoid_EnterState(AVOID_REENTER_LINE);
-                break;
-            }
+            Avoid_EnterState(AVOID_REENTER_LINE);
+            break;
         }
-        else
-        {
-            s_line_confirm = 0;
-        }
-        if (s_search_total_mm >= Avoid_SearchMaxMm)
-            Avoid_Abort();
         break;
 
     case AVOID_REENTER_LINE:
@@ -266,12 +253,8 @@ static void AvoidRoutine_Update5ms(u8 obstacle_entered)
             Avoid_Abort();
             break;
         }
-        if (!Avoid_OnLine())
-        {
-            Avoid_EnterState(AVOID_SEARCH_LINE);
-            break;
-        }
-        if (Avoid_NearCenter())
+        /* 首次压线后继续锁定右转，短暂丢线不再退回直行搜线。 */
+        if (Track_state == STATE_STRAIGHT)
         {
             if (s_center_confirm < AVOID_REENTER_CONFIRM)
                 s_center_confirm++;
@@ -285,7 +268,7 @@ static void AvoidRoutine_Update5ms(u8 obstacle_entered)
         {
             Avoid_Active = 0;
             s_cooldown = AVOID_COOLDOWN_TICKS;
-            s_resume_speed = 0;
+            s_resume_speed = s_avoid_speed;
             ObstacleGuard_SetEnabled(&s_guard, 1U);
             Avoid_EnterState(AVOID_IDLE);
         }
@@ -336,7 +319,7 @@ static void Avoid_ComputeOutputs(void)
         break;
 
     case AVOID_DIAGONAL:
-        s_avoid_speed = Avoid_Ramp(s_avoid_speed, Avoid_ArcSpeed,
+        s_avoid_speed = Avoid_Ramp(s_avoid_speed, Avoid_DiagonalSpeed,
                                    AVOID_SPEED_RISE_STEP, Avoid_BrakeFallStep);
         Patrol_Speed_Cmd = s_avoid_speed;
         Patrol_Turn_Cmd = 0;
@@ -353,7 +336,9 @@ static void Avoid_ComputeOutputs(void)
         s_avoid_speed = Avoid_Ramp(s_avoid_speed, Avoid_ReenterSpeed,
                                    AVOID_SPEED_RISE_STEP, Avoid_BrakeFallStep);
         Patrol_Speed_Cmd = s_avoid_speed;
-        Patrol_Turn_Cmd = turn_diff * Track_Turn_Scale;
+        turn_scale = (Avoid_ReenterSpeed > 1.0f) ?
+                     s_avoid_speed / Avoid_ReenterSpeed : 0.0f;
+        Patrol_Turn_Cmd = Avoid_ReenterTurnTarget * turn_scale;
         break;
 
     default:
